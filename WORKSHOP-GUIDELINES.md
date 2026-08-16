@@ -26,9 +26,66 @@ Legacy manual path (same result):
 
 `Copy-Item -Path "GuildieCrafts\*" -Destination "C:\Program Files (x86)\World of Warcraft\_anniversary_\Interface\AddOns\GuildieCrafts" -Recurse -Force`
 
-## CurseForge
+## CurseForge release
 
-Use `.pkgmeta` with `package-as: GuildieCrafts`. Tag releases (e.g. `v1.0.0`) for auto-packaging.
+CurseForge is linked to GitHub and uses **tagged commits** for automatic packaging. Pushing code to `main` alone does **not** publish a new CurseForge file — only pushing a **version tag** does.
+
+### Project setup (one-time)
+
+On CurseForge → Project → **Source**:
+
+| Setting | Value |
+|---------|--------|
+| Source code | GitHub |
+| Repository URL | `https://github.com/Henrik8210/guildie-crafts` |
+| Automatic packaging | **Package any new tagged commits** (not “package all commits”) |
+
+The repo root has `.pkgmeta` with `package-as: GuildieCrafts`. The packager zips only `GuildieCrafts/` and ignores `GuildieCraftsTest/`, `scripts/`, and dev docs.
+
+Project logo: [Art/GuildieCrafts-Logo.png](Art/GuildieCrafts-Logo.png).
+
+### How it works
+
+1. You commit and push changes to `main` on GitHub (normal dev workflow).
+2. A **git tag** marks a specific commit as a release (e.g. `v2.1.0`). Tags are not new commits — they are labels on an existing commit.
+3. When the tag is pushed to GitHub, CurseForge detects it and runs the packager.
+4. The packager builds a zip from `GuildieCrafts/` and uploads it under **Files** on CurseForge, using `## Version:` from `GuildieCrafts/GuildieCrafts.toc`.
+
+Keep the tag name and `.toc` version aligned (e.g. tag `v2.1.0` ↔ toc `2.1.0`).
+
+### Release checklist
+
+Before tagging:
+
+1. Bump `## Version:` in `GuildieCrafts/GuildieCrafts.toc`.
+2. Run `.\scripts\sync-guildiecraftstest.ps1`.
+3. Run `.\scripts\check-craft-categories.ps1` if HoD crafts changed.
+4. Commit and push to `main`.
+
+To publish on CurseForge (only when explicitly requested — see **Agent instructions** below):
+
+```powershell
+git tag v2.1.0          # match the .toc version, with a v prefix
+git push origin v2.1.0
+```
+
+If the tag already exists locally but was never pushed, push it. If you need to move a tag to a newer commit (rare), delete and recreate it — never force-push tags unless you know CurseForge should rebuild that version.
+
+Check CurseForge → **Files** or **Activity** after a minute; packaging is not instant.
+
+### Agent instructions
+
+**Do not create or push CurseForge release tags unless the user explicitly asks** to publish or release a version on CurseForge (e.g. “put this on CurseForge”, “release v2.1.0 to CurseForge”, “push the CurseForge tag”).
+
+When the user does ask:
+
+1. Confirm `GuildieCrafts/GuildieCrafts.toc` version matches the requested release.
+2. Confirm changes are committed and pushed to `main`.
+3. Create the tag if it does not exist: `git tag v<version>` (e.g. `v2.1.0`).
+4. Push the tag: `git push origin v<version>`.
+5. Tell the user to check CurseForge Files/Activity for the new build.
+
+Normal “commit to GitHub” requests do **not** include tagging unless the user also asks for CurseForge.
 
 ## Coexistence with GemOrder
 
