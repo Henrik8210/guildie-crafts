@@ -1,0 +1,21 @@
+﻿## Interface: 20505, 20506
+## Title: GuildWorkshopTest
+## Notes: Bisect/debug mirror of Guild Workshop v1.1.0. Separate saved vars and sync prefix (GuildWrkT). Disable main GuildWorkshop when testing logout.
+## Author: Henrik8210
+## Version: 1.1.0
+## SavedVariables: GuildWorkshopTestDB
+
+Core.lua
+Workshops.lua
+Materials.lua
+Gems.lua
+GearPvp.lua
+Gear.lua
+Rooms.lua
+Stock.lua
+Recipes.lua
+Tooltips.lua
+Sync.lua
+UI.lua
+Minimap.lua
+Commands.lua

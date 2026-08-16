@@ -1,0 +1,25 @@
+﻿GuildWorkshopTest bisect log (logout debugging)
+==========================================
+Disable main GuildWorkshop. Enable only GuildWorkshopTest.
+
+Current baseline: v0.7.80 (mirrors GuildWorkshop v0.7.80)
+Sync: .\scripts\sync-GuildWorkshopTest.ps1
+
+Historical notes
+----------------
+v0.6.0-r1 PASS — stripped post-0.6.0 load-time code (stockWatcher, eager UI, StaticPopup at load).
+
+v0.7.80 — full mirror of production GuildWorkshop with logout-safe patterns:
+  - Lazy UI (EnsureUI on first open)
+  - No BAG_UPDATE stock watcher
+  - Lazy StaticPopup registration
+  - hooksecurefunc dropdown tooltips (no SetScript on DropDownList)
+
+Test procedure
+--------------
+1. Disable GuildWorkshop, enable GuildWorkshopTest
+2. /reload
+3. Logout without opening UI
+4. Logout after opening UI and using dropdowns
+
+Commands: /gotest, /got, /gott

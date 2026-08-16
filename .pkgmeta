@@ -1,0 +1,12 @@
+# CurseForge / BigWigs packager config.
+# Packages only GuildWorkshop/ — GuildWorkshopTest and dev files are excluded.
+package-as: GuildWorkshop
+
+ignore:
+  - GuildWorkshopTest
+  - scripts
+  - WORKSHOP-GUIDELINES.md
+  - PHASES.md
+  - README.md
+  - .cursor
+  - .gitignore
