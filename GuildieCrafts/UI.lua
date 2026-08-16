@@ -10,8 +10,6 @@ local ORDER_ROW_HEIGHT = 100
 local ORDER_ROW_GAP = 10
 local ORDER_ROW_VALUE_X = 80
 local ORDER_ROW_IN_PROGRESS_BAND = 24
-local ORDER_ROW_HAMMER_ICON = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Art\\CraftHammer"
-local ORDER_ROW_HAMMER_SIZE = 18
 local RECIPE_ROW_HEIGHT = 22
 local RECIPE_SECTION_GAP = 18
 local RECIPE_HEADER_AFTER_GAP = 8
@@ -41,6 +39,11 @@ local QUEUE_SCROLLBAR_GUTTER = 12
 local QUEUE_HEADER_BAND = 38
 local WORKSHOP_SECTION_GAP = 14
 local WORKSHOP_MEMBERS_GAP = 12
+local WORKSHOP_LABEL_X = 16
+local WORKSHOP_CONTROL_X = 120
+local WORKSHOP_DROPDOWN_WIDTH = 280
+local WORKSHOP_FORM_ROW_GAP = 28
+local WORKSHOP_CONTROL_V_OFFSET = 4
 local NOTES_PLACEHOLDER = "Fx. this is my BiS gear..."
 local GEM_PLACEHOLDER = "Select gem..."
 local GEAR_TYPE_PLACEHOLDER = "Select type..."
@@ -155,21 +158,16 @@ local function GetOrderRowBandExtra(order)
     return 0
 end
 
-local function AttachHammerAnimation(hammer, anchor)
+local function AttachTextPulseAnimation(fontString, parent)
     local t = 0
-    local parent = hammer:GetParent()
     parent:SetScript("OnUpdate", function(_, elapsed)
         t = t + elapsed
-        local phase = t * 7
-        local bounce = math.abs(math.sin(phase)) * 4
-        hammer:ClearAllPoints()
-        hammer:SetPoint("RIGHT", anchor, "LEFT", -4, -bounce)
-        if hammer.SetRotation then
-            hammer:SetRotation((-18 + math.sin(phase) * 22) * math.pi / 180)
-        end
+        local alpha = 0.35 + 0.65 * (0.5 + 0.5 * math.sin(t * 1.8))
+        fontString:SetAlpha(alpha)
     end)
     parent:SetScript("OnHide", function()
         parent:SetScript("OnUpdate", nil)
+        fontString:SetAlpha(1)
     end)
 end
 
@@ -189,14 +187,9 @@ local function CreateInProgressBand(row, order, contentWidth)
     bandLine:SetColorTexture(0.35, 0.55, 0.78, 0.55)
 
     local statusText = band:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    statusText:SetPoint("CENTER", band, "CENTER", 6, 0)
+    statusText:SetPoint("CENTER", band, "CENTER", 0, 0)
     statusText:SetText(GuildieCrafts_GetOrderStatusLabel(order))
-
-    local hammer = band:CreateTexture(nil, "OVERLAY")
-    hammer:SetSize(ORDER_ROW_HAMMER_SIZE, ORDER_ROW_HAMMER_SIZE)
-    hammer:SetTexture(ORDER_ROW_HAMMER_ICON)
-    hammer:SetPoint("RIGHT", statusText, "LEFT", -4, 0)
-    AttachHammerAnimation(hammer, statusText)
+    AttachTextPulseAnimation(statusText, band)
 
     return band
 end
@@ -237,6 +230,34 @@ local function SetFrameTitle(frame, text)
             title:SetText(text)
         end
     end
+end
+
+local function SetFramePortraitIcon(frame, texturePath)
+    if not frame or not texturePath then
+        return
+    end
+    local portrait = frame.PortraitContainer and frame.PortraitContainer.portrait
+    local isAddonPath = type(texturePath) == "string" and texturePath:find("AddOns\\", 1, true) ~= nil
+    if isAddonPath and portrait then
+        portrait:SetTexture(texturePath)
+        if portrait.SetTexCoord then
+            -- Zoom out slightly inside the circular portrait mask.
+            portrait:SetTexCoord(-0.05, 1.05, -0.05, 1.05)
+        end
+        return
+    end
+    if frame.SetPortraitTexture then
+        frame:SetPortraitTexture(texturePath)
+        return
+    end
+    if not portrait then
+        return
+    end
+    if SetPortraitToTexture and type(texturePath) == "string" then
+        SetPortraitToTexture(portrait, texturePath)
+        return
+    end
+    portrait:SetTexture(texturePath)
 end
 
 local function ApplyParchmentBackground(parent)
@@ -500,12 +521,8 @@ function UI:CreateMainFrame()
     end)
 
     SetFrameTitle(f, "Guildie Crafts")
-    f.portraitIcon = GuildieCrafts_GetDefaultWorkshopIcon()
-    if f.PortraitContainer and f.PortraitContainer.portrait then
-        f.PortraitContainer.portrait:SetTexture(f.portraitIcon)
-    elseif f.SetPortraitTexture then
-        f:SetPortraitTexture(f.portraitIcon)
-    end
+    f.portraitIcon = GuildieCrafts_GetDefaultWorkshopPortrait()
+    SetFramePortraitIcon(f, f.portraitIcon)
 
     f.subtitle = CreateLabel(f, "Guildie Crafts — orders, stock, and recipes", "GameFontHighlightSmall")
     f.subtitle:SetPoint("TOP", 0, -28)
@@ -709,7 +726,7 @@ function UI:CreateWorkshopPanel()
     panel:Hide()
     EnableDropdownDismissLayer(panel)
 
-    panel.title = CreateLabel(panel, "Guildie Craftss", "GameFontNormalLarge")
+    panel.title = CreateLabel(panel, "Guildie Crafts", "GameFontNormalLarge")
     panel.title:SetPoint("TOPLEFT", 16, -12)
 
     panel.status = CreateLabel(panel, "", "GameFontHighlight")
@@ -726,45 +743,76 @@ function UI:CreateWorkshopPanel()
     f.selectedCreatePhase = GuildieCrafts_GetDefaultPhase()
     f.selectedCreateProfession = "jewelcrafting"
 
+    panel.createSectionTitle = CreateLabel(panel, "Create new workshop", "GameFontNormal")
+    panel.createSectionTitle:SetPoint("TOPLEFT", panel.guildNotice, "BOTTOMLEFT", 0, -WORKSHOP_SECTION_GAP)
+
     panel.createNameLabel = CreateLabel(panel, "Name:", "GameFontHighlight")
-    panel.createNameLabel:SetPoint("TOPLEFT", 16, -92)
+    panel.createNameLabel:SetPoint("TOPLEFT", panel.createSectionTitle, "BOTTOMLEFT", 0, -12)
 
     panel.nameInput = CreateFrame("EditBox", nil, panel, "InputBoxTemplate")
-    panel.nameInput:SetSize(280, 20)
-    panel.nameInput:SetPoint("TOPLEFT", 120, -88)
+    panel.nameInput:SetHeight(20)
     panel.nameInput:SetAutoFocus(false)
     panel.nameInput:SetMaxLetters(40)
+    panel.nameInput:SetPoint("LEFT", panel, "LEFT", WORKSHOP_CONTROL_X, 0)
+    panel.nameInput:SetPoint("TOP", panel.createNameLabel, "TOP", 0, WORKSHOP_CONTROL_V_OFFSET)
+    panel.nameInput:SetWidth(WORKSHOP_DROPDOWN_WIDTH + 32)
 
-    panel.createPhaseLabel = CreateLabel(panel, "Expansion:", "GameFontHighlight")
-    panel.createPhaseLabel:SetPoint("TOPLEFT", 16, -120)
+    panel.createExpansionLabel = CreateLabel(panel, "Expansion:", "GameFontHighlight")
+    panel.createExpansionLabel:SetPoint("TOPLEFT", panel.createNameLabel, "BOTTOMLEFT", 0, -WORKSHOP_FORM_ROW_GAP)
 
     panel.expansionDropdown = CreateFrame("Frame", "GuildieCraftsExpansionDropdown", panel, "UIDropDownMenuTemplate")
-    panel.expansionDropdown:SetPoint("TOPLEFT", 120, -116)
-    UIDropDownMenu_SetWidth(panel.expansionDropdown, 280)
+    panel.expansionDropdown:SetPoint("LEFT", panel.nameInput, "LEFT")
+    panel.expansionDropdown:SetPoint("TOP", panel.createExpansionLabel, "TOP", 0, WORKSHOP_CONTROL_V_OFFSET)
+    UIDropDownMenu_SetWidth(panel.expansionDropdown, WORKSHOP_DROPDOWN_WIDTH)
     UIDropDownMenu_Initialize(panel.expansionDropdown, function()
         GuildieCrafts_ClearDropdownItemTooltips()
         local info = UIDropDownMenu_CreateInfo()
-        for _, option in ipairs(GuildieCrafts_GetExpansionPhaseOptions()) do
+        for _, option in ipairs(GuildieCrafts_GetExpansionOptions()) do
             info = UIDropDownMenu_CreateInfo()
-            info.text = option.label
-            MarkDropdownSelection(info,
-                f.selectedCreateExpansion == option.expansion and f.selectedCreatePhase == option.phase)
+            local suffix = option.enabled and "" or " |cff888888(coming soon)|r"
+            info.text = option.label .. suffix
+            info.disabled = not option.enabled
+            MarkDropdownSelection(info, f.selectedCreateExpansion == option.expansion)
             info.func = function()
                 f.selectedCreateExpansion = option.expansion
-                f.selectedCreatePhase = option.phase
                 SetDropdownDisplayText(panel.expansionDropdown, option.label)
+                UI:RefreshCreatePhaseDropdown()
             end
             UIDropDownMenu_AddButton(info)
         end
     end)
-    SetDropdownDisplayText(panel.expansionDropdown, "TBC — Phase 3")
+    SetDropdownDisplayText(panel.expansionDropdown, "TBC")
+
+    panel.createPhaseLabel = CreateLabel(panel, "Phase:", "GameFontHighlight")
+    panel.createPhaseLabel:SetPoint("TOPLEFT", panel.createExpansionLabel, "BOTTOMLEFT", 0, -WORKSHOP_FORM_ROW_GAP)
+
+    panel.phaseDropdown = CreateFrame("Frame", "GuildieCraftsPhaseDropdown", panel, "UIDropDownMenuTemplate")
+    panel.phaseDropdown:SetPoint("LEFT", panel.expansionDropdown, "LEFT")
+    panel.phaseDropdown:SetPoint("TOP", panel.createPhaseLabel, "TOP", 0, WORKSHOP_CONTROL_V_OFFSET)
+    UIDropDownMenu_SetWidth(panel.phaseDropdown, WORKSHOP_DROPDOWN_WIDTH)
+    UIDropDownMenu_Initialize(panel.phaseDropdown, function()
+        GuildieCrafts_ClearDropdownItemTooltips()
+        local info = UIDropDownMenu_CreateInfo()
+        for _, option in ipairs(GuildieCrafts_GetPhaseOptions(f.selectedCreateExpansion)) do
+            info = UIDropDownMenu_CreateInfo()
+            info.text = option.label
+            MarkDropdownSelection(info, f.selectedCreatePhase == option.phase)
+            info.func = function()
+                f.selectedCreatePhase = option.phase
+                SetDropdownDisplayText(panel.phaseDropdown, option.label)
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+    SetDropdownDisplayText(panel.phaseDropdown, f.selectedCreatePhase)
 
     panel.createProfessionLabel = CreateLabel(panel, "Profession:", "GameFontHighlight")
-    panel.createProfessionLabel:SetPoint("TOPLEFT", 16, -148)
+    panel.createProfessionLabel:SetPoint("TOPLEFT", panel.createPhaseLabel, "BOTTOMLEFT", 0, -WORKSHOP_FORM_ROW_GAP)
 
     panel.professionDropdown = CreateFrame("Frame", "GuildieCraftsProfessionDropdown", panel, "UIDropDownMenuTemplate")
-    panel.professionDropdown:SetPoint("TOPLEFT", 120, -144)
-    UIDropDownMenu_SetWidth(panel.professionDropdown, 280)
+    panel.professionDropdown:SetPoint("LEFT", panel.expansionDropdown, "LEFT")
+    panel.professionDropdown:SetPoint("TOP", panel.createProfessionLabel, "TOP", 0, WORKSHOP_CONTROL_V_OFFSET)
+    UIDropDownMenu_SetWidth(panel.professionDropdown, WORKSHOP_DROPDOWN_WIDTH)
     UIDropDownMenu_Initialize(panel.professionDropdown, function()
         GuildieCrafts_ClearDropdownItemTooltips()
         local info = UIDropDownMenu_CreateInfo()
@@ -785,7 +833,7 @@ function UI:CreateWorkshopPanel()
 
     panel.createBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     panel.createBtn:SetSize(90, 22)
-    panel.createBtn:SetPoint("TOPLEFT", 120, -176)
+    panel.createBtn:SetPoint("TOPLEFT", panel.professionDropdown, "BOTTOMLEFT", 0, -12)
     panel.createBtn:SetText("Create")
     panel.createBtn:SetScript("OnClick", function()
         local _, err = GuildieCrafts_CreateWorkshop(
@@ -803,12 +851,16 @@ function UI:CreateWorkshopPanel()
         end
     end)
 
-    panel.joinLabel = CreateLabel(panel, "Select a workshop:", "GameFontHighlight")
-    panel.joinLabel:SetPoint("TOPLEFT", 16, -208)
+    panel.selectSectionTitle = CreateLabel(panel, "Select a workshop", "GameFontNormal")
+    panel.selectSectionTitle:SetPoint("TOPLEFT", panel.createBtn, "BOTTOMLEFT", WORKSHOP_LABEL_X - WORKSHOP_CONTROL_X, -WORKSHOP_SECTION_GAP)
+
+    panel.openLabel = CreateLabel(panel, "Workshop:", "GameFontHighlight")
+    panel.openLabel:SetPoint("TOPLEFT", panel.selectSectionTitle, "BOTTOMLEFT", 0, -12)
 
     panel.joinDropdown = CreateFrame("Frame", "GuildieCraftsJoinDropdown", panel, "UIDropDownMenuTemplate")
-    panel.joinDropdown:SetPoint("TOPLEFT", 120, -204)
-    UIDropDownMenu_SetWidth(panel.joinDropdown, 280)
+    panel.joinDropdown:SetPoint("LEFT", panel.expansionDropdown, "LEFT")
+    panel.joinDropdown:SetPoint("TOP", panel.openLabel, "TOP", 0, WORKSHOP_CONTROL_V_OFFSET)
+    UIDropDownMenu_SetWidth(panel.joinDropdown, WORKSHOP_DROPDOWN_WIDTH)
     UIDropDownMenu_Initialize(panel.joinDropdown, function()
         GuildieCrafts_ClearDropdownItemTooltips()
         local info = UIDropDownMenu_CreateInfo()
@@ -839,12 +891,9 @@ function UI:CreateWorkshopPanel()
         end
     end)
 
-    panel.openLabel = CreateLabel(panel, "Workshop:", "GameFontHighlight")
-    panel.openLabel:SetPoint("TOPLEFT", 16, -242)
-
     panel.roomList = CreateLabel(panel, "", "GameFontHighlightSmall")
-    panel.roomList:SetPoint("TOPLEFT", 16, -260)
-    panel.roomList:SetWidth(FRAME_WIDTH - 48)
+    panel.roomList:SetPoint("TOPLEFT", panel.joinDropdown, "BOTTOMLEFT", 0, -8)
+    panel.roomList:SetWidth(FRAME_WIDTH - WORKSHOP_CONTROL_X - 32)
     panel.roomList:SetJustifyH("LEFT")
 
     panel.closeBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
@@ -875,21 +924,20 @@ function UI:CreateWorkshopPanel()
     end)
 
     panel.pickerControls = {
+        panel.createSectionTitle,
         panel.createNameLabel,
         panel.nameInput,
-        panel.createPhaseLabel,
+        panel.createExpansionLabel,
         panel.expansionDropdown,
+        panel.createPhaseLabel,
+        panel.phaseDropdown,
         panel.createProfessionLabel,
         panel.professionDropdown,
         panel.createBtn,
-        panel.joinLabel,
+        panel.selectSectionTitle,
+        panel.openLabel,
         panel.joinDropdown,
     }
-
-    panel.help = CreateLabel(panel, "Create or select a workshop for a specific expansion, phase, and profession.", "GameFontDisableSmall")
-    panel.help:SetPoint("BOTTOMLEFT", 16, 12)
-    panel.help:SetWidth(FRAME_WIDTH - 48)
-    panel.help:SetJustifyH("LEFT")
 
     panel.membersHelp = CreateLabel(panel, "Co-leaders can promote/demote crafters for all members except the leader. Only the leader manages co-leaders.", "GameFontDisableSmall")
     panel.membersHelp:SetWidth(FRAME_WIDTH - 48)
@@ -912,6 +960,35 @@ function UI:CreateWorkshopPanel()
     panel.memberRows = {}
 
     f.workshopPanel = panel
+    self:RefreshCreatePhaseDropdown()
+end
+
+function UI:RefreshCreatePhaseDropdown()
+    local f = self.frame
+    local panel = f and f.workshopPanel
+    if not panel or not panel.phaseDropdown then
+        return
+    end
+
+    local phases = GuildieCrafts_GetPhaseOptions(f.selectedCreateExpansion)
+    local valid = false
+    for _, option in ipairs(phases) do
+        if option.phase == f.selectedCreatePhase then
+            valid = true
+            break
+        end
+    end
+    if not valid then
+        f.selectedCreatePhase = phases[1] and phases[1].phase or nil
+    end
+
+    if f.selectedCreatePhase then
+        SetDropdownDisplayText(panel.phaseDropdown, f.selectedCreatePhase)
+        UIDropDownMenu_EnableDropDown(panel.phaseDropdown)
+    else
+        SetDropdownDisplayText(panel.phaseDropdown, "—")
+        UIDropDownMenu_DisableDropDown(panel.phaseDropdown)
+    end
 end
 
 function UI:LayoutWorkshopPanel(panel, showPicker)
@@ -925,12 +1002,15 @@ function UI:LayoutWorkshopPanel(panel, showPicker)
     panel.openLabel:ClearAllPoints()
     panel.roomList:ClearAllPoints()
     if showPicker then
-        panel.openLabel:SetPoint("TOPLEFT", 16, -242)
+        panel.openLabel:SetPoint("TOPLEFT", panel.selectSectionTitle, "BOTTOMLEFT", 0, -12)
         panel.openLabel:Show()
-        panel.roomList:SetPoint("TOPLEFT", 16, -260)
+        panel.joinDropdown:ClearAllPoints()
+        panel.joinDropdown:SetPoint("LEFT", panel.expansionDropdown, "LEFT")
+        panel.joinDropdown:SetPoint("TOP", panel.openLabel, "TOP", 0, WORKSHOP_CONTROL_V_OFFSET)
+        panel.roomList:SetPoint("TOPLEFT", panel.joinDropdown, "BOTTOMLEFT", 0, -8)
     else
         panel.openLabel:Hide()
-        panel.roomList:SetPoint("TOPLEFT", panel.guildNotice, "BOTTOMLEFT", 0, -WORKSHOP_SECTION_GAP)
+        panel.roomList:Hide()
     end
 end
 
@@ -971,7 +1051,13 @@ function UI:RefreshWorkshopMembers()
     end
 
     panel.membersHelp:ClearAllPoints()
-    panel.membersHelp:SetPoint("TOPLEFT", panel.roomList, "BOTTOMLEFT", 0, -WORKSHOP_SECTION_GAP)
+    if panel.closeBtn:IsShown() then
+        panel.membersHelp:SetPoint("TOPLEFT", panel.closeBtn, "BOTTOMLEFT", 0, -WORKSHOP_SECTION_GAP)
+    elseif panel.changeWorkshopBtn:IsShown() then
+        panel.membersHelp:SetPoint("TOPLEFT", panel.changeWorkshopBtn, "BOTTOMLEFT", 0, -WORKSHOP_SECTION_GAP)
+    else
+        panel.membersHelp:SetPoint("TOPLEFT", panel.status, "BOTTOMLEFT", 0, -WORKSHOP_SECTION_GAP)
+    end
 
     panel.membersLabel:ClearAllPoints()
     panel.membersLabel:SetPoint("TOPLEFT", panel.membersHelp, "BOTTOMLEFT", 0, -WORKSHOP_MEMBERS_GAP)
@@ -1099,16 +1185,16 @@ function UI:RefreshWorkshopPanel()
 
     local inGuild = IsInGuild()
     if inGuild then
-        panel.guildNotice:SetText("|cff888888Guild-only — workshops are never shared outside your guild.|r")
         panel.createBtn:Enable()
         panel.nameInput:Enable()
         UIDropDownMenu_EnableDropDown(panel.expansionDropdown)
         UIDropDownMenu_EnableDropDown(panel.professionDropdown)
+        self:RefreshCreatePhaseDropdown()
     else
-        panel.guildNotice:SetText("|cffff0000You must be in a guild to create or select workshops.|r")
         panel.createBtn:Disable()
         panel.nameInput:Disable()
         UIDropDownMenu_DisableDropDown(panel.expansionDropdown)
+        UIDropDownMenu_DisableDropDown(panel.phaseDropdown)
         UIDropDownMenu_DisableDropDown(panel.professionDropdown)
     end
 
@@ -1117,45 +1203,32 @@ function UI:RefreshWorkshopPanel()
     self:LayoutWorkshopPanel(panel, showPicker)
 
     if room then
-        local role = "Member"
-        local player = UnitName("player")
-        local crafterSingular = GuildieCrafts_GetRoomCrafterSingular(room)
-        if room.leader == player then
-            role = "Leader"
-        elseif GuildieCrafts_IsRoomCoLeader(room, player) then
-            role = "Co-leader"
-        end
-        if room.collaborators and room.collaborators[player] then
-            if role == "Leader" then
-                role = "Leader, " .. crafterSingular
-            elseif role == "Co-leader" then
-                role = "Co-leader, " .. crafterSingular
-            else
-                role = crafterSingular
-            end
-        end
+        panel.guildNotice:Hide()
         panel.status:SetText(string.format(
-            "Active: |cff00ff00%s|r  |cff888888(%s)|r  (Leader: %s) — You: %s",
+            "Active: |cff00ff00%s|r  |cff888888(%s)|r",
             room.name,
-            GuildieCrafts_FormatWorkshopScope(room),
-            GuildieCrafts_ColorizePlayer(room.leader),
-            role
+            GuildieCrafts_FormatWorkshopScope(room)
         ))
     else
         panel.status:SetText("|cff888888No workshop selected — select or create one to place orders.|r")
+        if inGuild then
+            panel.guildNotice:SetText("|cff888888Guild-only — workshops are never shared outside your guild.|r")
+            panel.guildNotice:Show()
+        else
+            panel.guildNotice:SetText("|cffff0000You must be in a guild to create or select workshops.|r")
+            panel.guildNotice:Show()
+        end
     end
 
     if room then
-        panel.roomList:SetText(string.format(
-            "%s — %s  |cff888888(%s)|r",
-            room.name,
-            GuildieCrafts_ColorizePlayer(room.leader),
-            GuildieCrafts_FormatWorkshopScope(room)
-        ))
+        panel.roomList:SetText("")
+        panel.roomList:Hide()
     elseif #GuildieCrafts_GetOpenRooms() == 0 then
+        panel.roomList:Show()
         panel.roomList:SetText("No open workshops yet.")
     else
-        panel.roomList:SetText("Select a workshop above.")
+        panel.roomList:Show()
+        panel.roomList:SetText("")
     end
 
     if room then
@@ -1165,20 +1238,30 @@ function UI:RefreshWorkshopPanel()
     end
 
     local canManageWorkshop = room and GuildieCrafts_CanManageWorkshop(room, UnitName("player"))
-    panel.closeBtn:SetShown(canManageWorkshop)
-    panel.changeWorkshopBtn:SetShown(room ~= nil)
-    panel.changeWorkshopBtn:ClearAllPoints()
-    if canManageWorkshop then
-        panel.changeWorkshopBtn:SetPoint("RIGHT", panel.closeBtn, "LEFT", -8, 0)
-    else
-        panel.changeWorkshopBtn:SetPoint("TOPRIGHT", -16, -10)
-    end
 
+    panel.title:SetShown(not room)
+    panel.status:ClearAllPoints()
     if room then
-        panel.help:Hide()
+        panel.status:SetPoint("TOPLEFT", 16, -12)
     else
-        panel.help:Show()
-        panel.help:SetText("Select or create a workshop first. Once active, manage members and crafters below.")
+        panel.status:SetPoint("TOPLEFT", 16, -38)
+    end
+    panel.status:SetWidth(FRAME_WIDTH - 48)
+
+    panel.changeWorkshopBtn:ClearAllPoints()
+    panel.closeBtn:ClearAllPoints()
+    if room then
+        panel.changeWorkshopBtn:SetPoint("TOPLEFT", panel.status, "BOTTOMLEFT", 0, -10)
+        panel.changeWorkshopBtn:Show()
+        if canManageWorkshop then
+            panel.closeBtn:SetPoint("LEFT", panel.changeWorkshopBtn, "RIGHT", 8, 0)
+            panel.closeBtn:Show()
+        else
+            panel.closeBtn:Hide()
+        end
+    else
+        panel.changeWorkshopBtn:Hide()
+        panel.closeBtn:Hide()
     end
 
     self:RefreshWorkshopMembers()
@@ -3085,12 +3168,7 @@ function UI:UpdatePortraitIcon(room)
     end
 
     self.frame.portraitIcon = icon
-    local f = self.frame
-    if f.PortraitContainer and f.PortraitContainer.portrait then
-        f.PortraitContainer.portrait:SetTexture(icon)
-    elseif f.SetPortraitTexture then
-        f:SetPortraitTexture(icon)
-    end
+    SetFramePortraitIcon(self.frame, icon)
 end
 
 function UI:Refresh()

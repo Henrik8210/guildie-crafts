@@ -5,8 +5,15 @@ local ADDON_NAME = ...
 GuildieCraftsTest_EXPANSION_PHASES = {
     {
         expansion = "TBC",
-        label = "The Burning Crusade",
+        label = "TBC",
+        enabled = true,
         phases = { "Phase 3" },
+    },
+    {
+        expansion = "WOTLK",
+        label = "WOTLK",
+        enabled = false,
+        phases = {},
     },
 }
 
@@ -40,6 +47,7 @@ local PROFESSION_ICONS = {
 }
 
 local DEFAULT_WORKSHOP_ICON = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Art\\WorkshopLogo"
+local DEFAULT_WORKSHOP_PORTRAIT = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Art\\WorkshopLogoPortrait"
 
 local function ResolveSpellIcon(spellId)
     if not spellId then
@@ -74,7 +82,7 @@ end
 function GuildieCraftsTest_GetExpansionPhaseOptions()
     local options = {}
     for _, entry in ipairs(GuildieCraftsTest_EXPANSION_PHASES) do
-        for _, phase in ipairs(entry.phases) do
+        for _, phase in ipairs(entry.phases or {}) do
             table.insert(options, {
                 expansion = entry.expansion,
                 phase = phase,
@@ -83,6 +91,43 @@ function GuildieCraftsTest_GetExpansionPhaseOptions()
         end
     end
     return options
+end
+
+function GuildieCraftsTest_GetExpansionOptions()
+    local options = {}
+    for _, entry in ipairs(GuildieCraftsTest_EXPANSION_PHASES) do
+        table.insert(options, {
+            expansion = entry.expansion,
+            label = entry.label,
+            enabled = entry.enabled ~= false,
+        })
+    end
+    return options
+end
+
+function GuildieCraftsTest_GetPhaseOptions(expansionId)
+    local phases = {}
+    for _, entry in ipairs(GuildieCraftsTest_EXPANSION_PHASES) do
+        if entry.expansion == expansionId then
+            for _, phase in ipairs(entry.phases or {}) do
+                table.insert(phases, {
+                    phase = phase,
+                    label = phase,
+                })
+            end
+            break
+        end
+    end
+    return phases
+end
+
+function GuildieCraftsTest_IsExpansionEnabled(expansionId)
+    for _, entry in ipairs(GuildieCraftsTest_EXPANSION_PHASES) do
+        if entry.expansion == expansionId then
+            return entry.enabled ~= false
+        end
+    end
+    return false
 end
 
 function GuildieCraftsTest_GetProfessionOptions()
@@ -124,9 +169,13 @@ function GuildieCraftsTest_GetDefaultWorkshopIcon()
     return DEFAULT_WORKSHOP_ICON
 end
 
+function GuildieCraftsTest_GetDefaultWorkshopPortrait()
+    return DEFAULT_WORKSHOP_PORTRAIT
+end
+
 function GuildieCraftsTest_GetWorkshopPortraitIcon(room)
     if not room then
-        return DEFAULT_WORKSHOP_ICON
+        return DEFAULT_WORKSHOP_PORTRAIT
     end
     return GuildieCraftsTest_GetProfessionIcon(GuildieCraftsTest_GetRoomProfession(room))
 end
@@ -156,16 +205,19 @@ function GuildieCraftsTest_ValidateWorkshopDefinition(name, expansion, phase, pr
         return false, GuildieCraftsTest_GetProfessionLabel(profession)
             .. " workshops are coming in a future release."
     end
+    if not GuildieCraftsTest_IsExpansionEnabled(expansion) then
+        return false, "That expansion is not available yet."
+    end
 
-    local validExpansion = false
-    for _, option in ipairs(GuildieCraftsTest_GetExpansionPhaseOptions()) do
-        if option.expansion == expansion and option.phase == phase then
-            validExpansion = true
+    local validPhase = false
+    for _, option in ipairs(GuildieCraftsTest_GetPhaseOptions(expansion)) do
+        if option.phase == phase then
+            validPhase = true
             break
         end
     end
-    if not validExpansion then
-        return false, "Select a valid expansion and phase."
+    if not validPhase then
+        return false, "Select a valid phase."
     end
 
     return true

@@ -49,8 +49,12 @@ foreach ($file in $luaFiles) {
 }
 
 $artSrc = Join-Path $src "Art"
+$artDst = Join-Path $dst "Art"
 if (Test-Path $artSrc) {
-    Copy-Item -Path $artSrc -Destination (Join-Path $dst "Art") -Recurse -Force
+    if (-not (Test-Path $artDst)) {
+        New-Item -ItemType Directory -Path $artDst | Out-Null
+    }
+    Copy-Item -Path (Join-Path $artSrc "*") -Destination $artDst -Recurse -Force
     Write-Host "Synced Art/"
 }
 
