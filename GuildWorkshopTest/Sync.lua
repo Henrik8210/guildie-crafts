@@ -421,12 +421,19 @@ function Sync:OnAddonMessage(prefix, message, channel, sender)
         end
         local existingRoom = GuildWorkshopTestDB.rooms[parts[2]]
         local incomingCoLeaders = parts[10] and ParseNames(parts[10]) or nil
+        local incomingCollaborators = ParseNames(parts[6])
+        local collaborators
+        if sender == parts[4] then
+            collaborators = incomingCollaborators
+        else
+            collaborators = MergeNameMaps(existingRoom and existingRoom.collaborators, incomingCollaborators)
+        end
         local room = {
             id = parts[2],
             name = parts[3],
             leader = parts[4],
             open = parts[5] == "1",
-            collaborators = ParseNames(parts[6]),
+            collaborators = collaborators,
             members = MergeNameMaps(
                 existingRoom and existingRoom.members,
                 parts[9] and ParseNames(parts[9])

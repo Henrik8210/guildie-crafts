@@ -608,6 +608,10 @@ function UI:ShowTab(tabId, skipAccessCheck)
         GuildWorkshopTest.Sync:RequestSync()
     end
 
+    if tabId == "workshop" and IsInGuild() then
+        self._requestWorkshopSync = true
+    end
+
     self:Refresh()
 end
 
@@ -950,6 +954,7 @@ function UI:RefreshWorkshopMembers()
                         if not ok then
                             print("|cff00ccffGuildWorkshopTest|r " .. (err or "Action failed."))
                         else
+                            self._requestWorkshopSync = false
                             self:Refresh()
                         end
                     end)
@@ -959,6 +964,7 @@ function UI:RefreshWorkshopMembers()
                         if not ok then
                             print("|cff00ccffGuildWorkshopTest|r " .. (err or "Action failed."))
                         else
+                            self._requestWorkshopSync = false
                             self:Refresh()
                         end
                     end)
@@ -990,7 +996,8 @@ function UI:RefreshWorkshopPanel()
     end
 
     self:RefreshJoinDropdownCache()
-    if IsInGuild() then
+    if IsInGuild() and self._requestWorkshopSync then
+        self._requestWorkshopSync = false
         GuildWorkshopTest.Sync:RequestSync()
     end
 

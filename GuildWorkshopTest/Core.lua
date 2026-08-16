@@ -57,7 +57,7 @@ function GuildWorkshopTest_GetOrderStatusLabel(order)
     return GuildWorkshopTest_GetStatusLabel(order.status)
 end
 
-GuildWorkshopTest.VERSION = "1.1.0"
+GuildWorkshopTest.VERSION = "1.1.1"
 
 function GuildWorkshopTest_GetVersion()
     return GuildWorkshopTest.VERSION

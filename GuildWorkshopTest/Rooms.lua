@@ -301,6 +301,10 @@ function GuildWorkshopTest_AddCollaborator(roomId, playerName)
     room.collaborators = room.collaborators or {}
     room.collaborators[playerName] = true
     GuildWorkshopTest.Sync:BroadcastCollaborator(roomId, "add", playerName)
+    GuildWorkshopTest.Sync:BroadcastRoom(room)
+    if playerName == UnitName("player") and GuildWorkshopTest_ShouldShareStock() then
+        GuildWorkshopTest_RefreshLocalStock()
+    end
     return true
 end
 
@@ -460,6 +464,7 @@ function GuildWorkshopTest_RemoveCollaborator(roomId, playerName)
 
     room.collaborators[playerName] = nil
     GuildWorkshopTest.Sync:BroadcastCollaborator(roomId, "remove", playerName)
+    GuildWorkshopTest.Sync:BroadcastRoom(room)
     return true
 end
 
