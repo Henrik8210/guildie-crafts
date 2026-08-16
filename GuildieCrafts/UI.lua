@@ -9,6 +9,8 @@ local FRAME_HEIGHT = 660
 local ORDER_ROW_HEIGHT = 100
 local ORDER_ROW_GAP = 10
 local ORDER_ROW_VALUE_X = 80
+local GEMS_PER_ROW = 2
+local GEM_LINE_SPACING = 32
 local ORDER_ROW_IN_PROGRESS_BAND = 24
 local RECIPE_ROW_HEIGHT = 22
 local RECIPE_SECTION_GAP = 18
@@ -1650,8 +1652,9 @@ function UI:RefreshStockPanel()
             line:SetText(string.format("%dx %s", entry.count, ColorizeGem(entry.name)))
             row:SetWidth(line:GetStringWidth() + 4)
             if entry.itemId then
-                GuildieCrafts_AttachItemTooltip(row, function()
-                    return entry.itemId
+                row.itemId = entry.itemId
+                GuildieCrafts_AttachItemTooltip(row, function(owner)
+                    return owner.itemId
                 end)
             end
             table.insert(panel.stockLines, row)
@@ -1910,13 +1913,15 @@ function UI:RefreshRecipesPanel()
             local hasRecipe = #entry.jcs > 0
             local nameBtn = CreateFrame("Button", nil, row)
             nameBtn:SetPoint("LEFT", 8, 0)
-            nameBtn:SetSize(260, 18)
+            nameBtn:SetHeight(18)
             local nameText = nameBtn:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
             nameText:SetPoint("LEFT", 0, 0)
             nameText:SetText(hasRecipe and ColorizeItem(craft.name) or ("|cff888888" .. craft.name .. "|r"))
-            GuildieCrafts_AttachItemTooltip(nameBtn, function()
-                return craft.itemId
-            end)
+            nameBtn:SetWidth(nameText:GetStringWidth() + 4)
+            nameBtn.itemId = craft.itemId
+            GuildieCrafts_AttachItemTooltip(nameBtn, function(owner)
+                return owner.itemId
+            end, "ANCHOR_RIGHT")
 
             local crafterLabel = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
             crafterLabel:SetPoint("LEFT", nameBtn, "RIGHT", 8, 0)
@@ -1955,13 +1960,15 @@ function UI:RefreshRecipesPanel()
             local hasRecipe = #entry.jcs > 0
             local nameBtn = CreateFrame("Button", nil, row)
             nameBtn:SetPoint("LEFT", 8, 0)
-            nameBtn:SetSize(260, 18)
+            nameBtn:SetHeight(18)
             local nameText = nameBtn:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
             nameText:SetPoint("LEFT", 0, 0)
             nameText:SetText(hasRecipe and ColorizeGem(gem.name) or GreyGem(gem.name))
-            GuildieCrafts_AttachItemTooltip(nameBtn, function()
-                return gem.itemId
-            end)
+            nameBtn:SetWidth(nameText:GetStringWidth() + 4)
+            nameBtn.itemId = gem.itemId
+            GuildieCrafts_AttachItemTooltip(nameBtn, function(owner)
+                return owner.itemId
+            end, "ANCHOR_RIGHT")
 
             local jcLabel = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
             jcLabel:SetPoint("LEFT", nameBtn, "RIGHT", 8, 0)
@@ -3061,13 +3068,11 @@ end
 function UI:CreateGemIconRow(parent, order, yOffset, startX)
     local x = startX or 48
     local y = yOffset
-    local gemsPerRow = 2
-    local gemLineSpacing = 32
 
     for i, gemName in ipairs(order.gems or {}) do
-        if i > 1 and (i - 1) % gemsPerRow == 0 then
+        if i > 1 and (i - 1) % GEMS_PER_ROW == 0 then
             x = startX or 48
-            y = y - gemLineSpacing
+            y = y - GEM_LINE_SPACING
         end
 
         local itemId = GuildieCrafts_GetGemItemId(gemName)
@@ -3081,8 +3086,9 @@ function UI:CreateGemIconRow(parent, order, yOffset, startX)
             border:SetTexture("Interface\\Common\\WhiteIconFrame")
             border:SetAllPoints()
 
-            GuildieCrafts_AttachItemTooltip(btn, function()
-                return itemId
+            btn.itemId = itemId
+            GuildieCrafts_AttachItemTooltip(btn, function(owner)
+                return owner.itemId
             end)
 
             local labelBtn = CreateFrame("Button", nil, parent)
@@ -3093,13 +3099,24 @@ function UI:CreateGemIconRow(parent, order, yOffset, startX)
             label:SetText(ColorizeGem(gemName))
             label:SetJustifyH("LEFT")
             labelBtn:SetWidth(label:GetStringWidth())
-            GuildieCrafts_AttachItemTooltip(labelBtn, function()
-                return itemId
+            labelBtn.itemId = itemId
+            GuildieCrafts_AttachItemTooltip(labelBtn, function(owner)
+                return owner.itemId
             end)
 
             x = x + 32 + label:GetStringWidth() + 24
         end
     end
+
+    return y
+end
+
+local function GetGemRowCount(order)
+    local gemCount = order.gems and #order.gems or 0
+    if gemCount == 0 then
+        return 0
+    end
+    return math.ceil(gemCount / GEMS_PER_ROW)
 end
 
 function UI:IsCraftOrder(order)
@@ -3128,8 +3145,9 @@ function UI:GetOrderRowHeight(order)
     end
 
     local height = ORDER_ROW_HEIGHT + 8 + bandExtra
-    if order.gems and #order.gems > 2 then
-        height = height + 30
+    local gemRows = GetGemRowCount(order)
+    if gemRows > 1 then
+        height = height + ((gemRows - 1) * GEM_LINE_SPACING)
     end
     if order.notes and order.notes ~= "" then
         height = height + 22
@@ -3302,8 +3320,8 @@ function UI:CreateOrderRow(order, yOffset)
         local gemsLabel = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
         gemsLabel:SetPoint("TOPLEFT", 10, gemsTop - 2)
         gemsLabel:SetText("Gems:")
-        self:CreateGemIconRow(row, order, gemsTop, valueX)
-        detailY = gemsTop - 34
+        local lastGemY = self:CreateGemIconRow(row, order, gemsTop, valueX)
+        detailY = lastGemY - 34
     else
         local materialLabel = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
         materialLabel:SetPoint("TOPLEFT", 10, detailY - 2)

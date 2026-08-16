@@ -7,17 +7,17 @@ GuildieCrafts_BlacksmithingCrafts = {
         name = "Dawnsteel Bracers",
         itemId = 32571,
         hodCost = 4,
-        category = "Physical DPS",
+        category = "Healer",
         slot = "Wrist",
         class = "Plate",
         bind = "BoE",
-        notes = "Strength/crit plate bracers",
+        notes = "Intellect/healing plate bracers",
     },
     {
         name = "Dawnsteel Shoulders",
         itemId = 32573,
         hodCost = 2,
-        category = "Physical DPS",
+        category = "Healer",
         slot = "Shoulder",
         class = "Plate",
         bind = "BoP",
@@ -85,5 +85,6 @@ GuildieCrafts_BlacksmithingCrafts = {
 
 GuildieCrafts_BlacksmithingCraftCategories = {
     "Physical DPS",
+    "Healer",
     "Shadow Resist",
 }

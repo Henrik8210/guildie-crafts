@@ -288,15 +288,15 @@ function GuildieCraftsTest_TooltipsInit()
     GuildieCraftsTest.itemLinkTarget = nil
 end
 
-function GuildieCraftsTest_AttachItemTooltip(frame, getLinkFn)
+function GuildieCraftsTest_AttachItemTooltip(frame, getLinkFn, anchor)
     frame:EnableMouse(true)
     frame:SetScript("OnEnter", function(self)
         local link = getLinkFn(self)
         if link then
             if type(link) == "number" then
-                GuildieCraftsTest_ShowItemTooltip(self, link)
+                GuildieCraftsTest_ShowItemTooltip(self, link, anchor)
             else
-                GuildieCraftsTest_ShowLinkTooltip(self, link)
+                GuildieCraftsTest_ShowLinkTooltip(self, link, anchor)
             end
         end
     end)
