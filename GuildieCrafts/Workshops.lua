@@ -20,8 +20,8 @@ GuildieCrafts_EXPANSION_PHASES = {
 GuildieCrafts_PROFESSIONS = {
     { id = "jewelcrafting", label = "Jewelcrafting", enabled = true },
     { id = "tailoring", label = "Tailoring", enabled = true },
-    { id = "leatherworking", label = "Leatherworking", enabled = false },
-    { id = "blacksmithing", label = "Blacksmithing", enabled = false },
+    { id = "leatherworking", label = "Leatherworking", enabled = true },
+    { id = "blacksmithing", label = "Blacksmithing", enabled = true },
 }
 
 local CRAFTER_LABELS = {

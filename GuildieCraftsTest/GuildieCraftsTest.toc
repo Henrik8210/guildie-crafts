@@ -1,13 +1,15 @@
 ﻿## Interface: 20505, 20506
 ## Title: GuildieCraftsTest
-## Notes: Bisect/debug mirror of Guildie Crafts v2.0.0. Separate saved vars and sync prefix (GuildieCftT). Disable main GuildieCrafts when testing logout.
+## Notes: Bisect/debug mirror of Guildie Crafts v2.1.0. Separate saved vars and sync prefix (GuildieCftT). Disable main GuildieCrafts when testing logout.
 ## Author: Henrik8210
-## Version: 2.0.0
+## Version: 2.1.0
 ## SavedVariables: GuildieCraftsTestDB
 
 Core.lua
 Workshops.lua
 CraftsTailoring.lua
+CraftsLeatherworking.lua
+CraftsBlacksmithing.lua
 Materials.lua
 Gems.lua
 GearPvp.lua

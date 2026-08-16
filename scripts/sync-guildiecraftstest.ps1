@@ -32,7 +32,8 @@ function Convert-GuildieCraftsToTest([string]$text) {
 }
 
 $luaFiles = @(
-    "Core.lua", "Workshops.lua", "CraftsTailoring.lua", "Materials.lua", "Gems.lua", "GearPvp.lua", "Gear.lua", "Rooms.lua", "Stock.lua",
+    "Core.lua", "Workshops.lua", "CraftsTailoring.lua", "CraftsLeatherworking.lua", "CraftsBlacksmithing.lua",
+    "Materials.lua", "Gems.lua", "GearPvp.lua", "Gear.lua", "Rooms.lua", "Stock.lua",
     "Recipes.lua", "Tooltips.lua", "Sync.lua", "UI.lua", "Minimap.lua"
 )
 
@@ -90,6 +91,8 @@ $toc = @"
 Core.lua
 Workshops.lua
 CraftsTailoring.lua
+CraftsLeatherworking.lua
+CraftsBlacksmithing.lua
 Materials.lua
 Gems.lua
 GearPvp.lua

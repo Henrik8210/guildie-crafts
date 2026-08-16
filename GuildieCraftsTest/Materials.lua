@@ -15,13 +15,14 @@ GuildieCraftsTest_SCARCE_MATERIALS = {
 
 GuildieCraftsTest_CraftsByProfession = {
     tailoring = GuildieCraftsTest_TailoringCrafts or {},
-    -- Leatherworking and Blacksmithing HoD catalogs ship in later releases.
-    leatherworking = {},
-    blacksmithing = {},
+    leatherworking = GuildieCraftsTest_LeatherworkingCrafts or {},
+    blacksmithing = GuildieCraftsTest_BlacksmithingCrafts or {},
 }
 
 GuildieCraftsTest_CraftCategoryOrder = {
     tailoring = GuildieCraftsTest_TailoringCraftCategories,
+    leatherworking = GuildieCraftsTest_LeatherworkingCraftCategories,
+    blacksmithing = GuildieCraftsTest_BlacksmithingCraftCategories,
 }
 
 GuildieCraftsTest_CraftByName = {}

@@ -62,7 +62,7 @@ function GuildieCraftsTest_GetOrderStatusLabel(order)
     return GuildieCraftsTest_GetStatusLabel(order.status)
 end
 
-GuildieCraftsTest.VERSION = "2.0.0"
+GuildieCraftsTest.VERSION = "2.1.0"
 
 function GuildieCraftsTest_GetVersion()
     return GuildieCraftsTest.VERSION
