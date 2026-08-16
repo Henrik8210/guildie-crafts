@@ -1,4 +1,4 @@
-﻿GuildWorkshopTest = GuildWorkshop or {}
+﻿GuildWorkshopTest = GuildWorkshopTest or {}
 GuildWorkshopTest._loggingOut = false
 
 function GuildWorkshopTest_IsLoggingOut()

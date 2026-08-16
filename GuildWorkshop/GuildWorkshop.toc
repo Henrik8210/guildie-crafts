@@ -2,11 +2,12 @@
 ## Title: Guild Workshop
 ## Notes: Guild crafting workshops for TBC Anniversary — orders, stock, and recipes by profession and phase.
 ## Author: Henrik8210
-## Version: 1.1.1
+## Version: 1.2.6
 ## SavedVariables: GuildWorkshopDB
 
 Core.lua
 Workshops.lua
+CraftsTailoring.lua
 Materials.lua
 Gems.lua
 GearPvp.lua

@@ -11,8 +11,8 @@ GuildWorkshop_EXPANSION_PHASES = {
 GuildWorkshop_PROFESSIONS = {
     { id = "jewelcrafting", label = "Jewelcrafting", enabled = true },
     { id = "tailoring", label = "Tailoring", enabled = true },
-    { id = "leatherworking", label = "Leatherworking", enabled = true },
-    { id = "blacksmithing", label = "Blacksmithing", enabled = true },
+    { id = "leatherworking", label = "Leatherworking", enabled = false },
+    { id = "blacksmithing", label = "Blacksmithing", enabled = false },
 }
 
 local CRAFTER_LABELS = {
@@ -96,7 +96,7 @@ function GuildWorkshop_ValidateWorkshopDefinition(name, expansion, phase, profes
     end
     if not GuildWorkshop_IsProfessionEnabled(profession) then
         return false, GuildWorkshop_GetProfessionLabel(profession)
-            .. " workshops are not available yet."
+            .. " workshops are coming in a future release."
     end
 
     local validExpansion = false

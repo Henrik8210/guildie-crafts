@@ -1,4 +1,4 @@
-﻿GuildWorkshopTest = GuildWorkshop or {}
+﻿GuildWorkshopTest = GuildWorkshopTest or {}
 
 local PROFESSION_TRADE_SKILLS = {
     jewelcrafting = "Jewelcrafting",

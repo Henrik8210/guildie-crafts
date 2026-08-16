@@ -1,7 +1,7 @@
 ﻿local ADDON_NAME = ...
 
-GuildWorkshopTest = GuildWorkshop or {}
-local UI = {}
+GuildWorkshopTest = GuildWorkshopTest or {}
+local UI = GuildWorkshopTest.UI or {}
 GuildWorkshopTest.UI = UI
 
 local FRAME_WIDTH = 540
@@ -20,6 +20,7 @@ local ORDER_DIALOG_WARNING_HEIGHT = 36
 local ORDER_DIALOG_WARNING_GAP = 2
 local ORDER_DIALOG_NOTES_GAP = 16
 local GEM_RECIPE_WARNING = "|cffffff00Warning: Your guild has not yet obtained\nthe recipe for this gem cut.|r"
+local CRAFT_RECIPE_WARNING = "|cffffff00Warning: Your guild has not yet obtained\nthe recipe for this craft.|r"
 local ORDER_DIALOG_FOOTER_HEIGHT = 56
 local ORDER_DIALOG_DROPDOWN_WIDTH = 250
 local ORDER_DIALOG_FIELD_X = 90
@@ -36,7 +37,7 @@ local GEAR_TYPE_PLACEHOLDER = "Select type..."
 local GEAR_CLASS_PLACEHOLDER = "Select class..."
 local ROLE_PLACEHOLDER = "Select role..."
 local CRAFT_CATEGORY_PLACEHOLDER = "Select category..."
-local CRAFT_PLACEHOLDER = "Select craft..."
+local CRAFT_PLACEHOLDER = "Select gear..."
 
 local function RegisterCloseWorkshopPopup()
     if GuildWorkshopTest.closeWorkshopPopupRegistered then
@@ -1936,7 +1937,7 @@ function UI:PopulateCraftDropdown(dropdown, frameRef)
                 if GuildWorkshopTest_WorkshopHasRecipeForCraft(craft.name) then
                     frameRef.craftWarning:Hide()
                 else
-                    frameRef.craftWarning.text:SetText("|cffffff00Warning: Your guild has not yet obtained this recipe.|r")
+                    frameRef.craftWarning.text:SetText(CRAFT_RECIPE_WARNING)
                     frameRef.craftWarning:Show()
                 end
             end
@@ -1974,19 +1975,19 @@ function UI:RelayoutOrderForm()
 
     if f.orderFormMode == "craft" then
         placeRow(f.craftCategoryLabel, f.craftCategoryDropdown)
+        placeRow(f.roleLabel, f.roleDropdown)
         placeRow(f.craftLabel, f.craftDropdown)
         if f.craftWarning and f.craftWarning:IsShown() then
             f.craftWarning:ClearAllPoints()
             f.craftWarning:SetPoint(
                 "TOPLEFT",
-                inset,
-                "TOPLEFT",
-                ORDER_DIALOG_FIELD_X,
-                -y + ORDER_DIALOG_DROPDOWN_TEXT_INSET - ORDER_DIALOG_WARNING_GAP
+                f.craftDropdown,
+                "BOTTOMLEFT",
+                ORDER_DIALOG_DROPDOWN_TEXT_INSET,
+                -ORDER_DIALOG_WARNING_GAP
             )
             y = y + ORDER_DIALOG_WARNING_HEIGHT + ORDER_DIALOG_WARNING_GAP
         end
-        placeRow(f.roleLabel, f.roleDropdown)
     else
         placeRow(f.gearTypeLabel, f.gearTypeDropdown)
         if f.selectedGearCategory == "PVP" then
@@ -2162,6 +2163,14 @@ function UI:RefreshOrderFormWarnings()
         return
     end
     if f.orderFormMode == "craft" then
+        if f.selectedCraft and f.craftWarning then
+            if GuildWorkshopTest_WorkshopHasRecipeForCraft(f.selectedCraft.name) then
+                f.craftWarning:Hide()
+            else
+                f.craftWarning.text:SetText(CRAFT_RECIPE_WARNING)
+                f.craftWarning:Show()
+            end
+        end
         self:RelayoutOrderForm()
         return
     end
@@ -2287,7 +2296,7 @@ function UI:CreateOrderForm()
     SetDropdownDisplayText(f.craftCategoryDropdown, CRAFT_CATEGORY_PLACEHOLDER)
     ConfigureOrderDropdown(f.craftCategoryDropdown, ORDER_DIALOG_DROPDOWN_WIDTH)
 
-    f.craftLabel = CreateLabel(inset, "Craft:", "GameFontHighlight")
+    f.craftLabel = CreateLabel(inset, "Gear:", "GameFontHighlight")
     f.craftLabel:Hide()
     f.craftDropdown = CreateFrame("Frame", "GuildWorkshopTestCraftDropdown", inset, "UIDropDownMenuTemplate")
     f.craftDropdown:Hide()
@@ -2707,7 +2716,7 @@ function UI:CreateOrderRow(order, yOffset)
 
     local itemLabel = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
     itemLabel:SetPoint("TOPLEFT", 10, contentTop - 2)
-    itemLabel:SetText(isCraftOrder and "Craft:" or "Gear:")
+    itemLabel:SetText("Gear:")
 
     if gearItemId then
         local gearIcon = CreateFrame("Button", nil, row)

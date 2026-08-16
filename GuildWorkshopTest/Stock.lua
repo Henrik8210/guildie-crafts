@@ -1,4 +1,4 @@
-﻿GuildWorkshopTest = GuildWorkshop or {}
+﻿GuildWorkshopTest = GuildWorkshopTest or {}
 
 local function EnsureDB()
     GuildWorkshopTestDB = GuildWorkshopTestDB or {}

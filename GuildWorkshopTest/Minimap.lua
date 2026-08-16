@@ -1,6 +1,6 @@
 ﻿local ADDON_NAME = ...
 
-GuildWorkshopTest = GuildWorkshop or {}
+GuildWorkshopTest = GuildWorkshopTest or {}
 local MinimapBtn = {}
 GuildWorkshopTest.Minimap = MinimapBtn
 

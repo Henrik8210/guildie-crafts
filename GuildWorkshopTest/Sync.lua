@@ -1,6 +1,6 @@
 ﻿local ADDON_NAME = ...
 
-GuildWorkshopTest = GuildWorkshop or {}
+GuildWorkshopTest = GuildWorkshopTest or {}
 local Sync = {}
 GuildWorkshopTest.Sync = Sync
 

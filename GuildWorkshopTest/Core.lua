@@ -6,7 +6,7 @@ if not strtrim then
     end
 end
 
-GuildWorkshopTest = GuildWorkshop or {}
+GuildWorkshopTest = GuildWorkshopTest or {}
 GuildWorkshopTest.UI = GuildWorkshopTest.UI or {}
 GuildWorkshopTestDB = GuildWorkshopTestDB or {
     orders = {},
@@ -57,7 +57,7 @@ function GuildWorkshopTest_GetOrderStatusLabel(order)
     return GuildWorkshopTest_GetStatusLabel(order.status)
 end
 
-GuildWorkshopTest.VERSION = "1.1.1"
+GuildWorkshopTest.VERSION = "1.2.6"
 
 function GuildWorkshopTest_GetVersion()
     return GuildWorkshopTest.VERSION

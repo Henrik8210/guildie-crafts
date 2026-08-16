@@ -8,7 +8,8 @@ Successor to [GemOrder](https://github.com/Henrik8210/wow-addons); GemOrder rema
 
 - **Multiple workshops** per guild — each has a name, expansion/phase (e.g. TBC Phase 3), and profession
 - **Jewelcrafting (v1.0)** — order queue, epic gem stock, recipe coverage, PVP gear
-- **Tailoring / Leatherworking / Blacksmithing (v1.1)** — Heart of Darkness stock, recipe coverage, and craft orders
+- **Tailoring (v1.2)** — Heart of Darkness stock, all 9 Phase 3 craft recipes, and craft orders
+- **Leatherworking / Blacksmithing** — coming in future releases (same HoD patterns as Tailoring)
 
 ## Commands
 

@@ -19,6 +19,7 @@ function Convert-GuildWorkshopToTest([string]$text) {
     $text = $text -replace 'GuildWorkshopDB', 'GuildWorkshopTestDB'
     $text = $text -replace 'GuildWorkshop_', 'GuildWorkshopTest_'
     $text = $text -replace 'GuildWorkshop\.', 'GuildWorkshopTest.'
+    $text = $text -replace 'GuildWorkshop = GuildWorkshop or \{\}', 'GuildWorkshopTest = GuildWorkshopTest or {}'
     $text = $text -replace 'GuildWorkshop =', 'GuildWorkshopTest ='
     $text = $text -replace 'GUILDWORKSHOP_', 'GUILDWORKSHOPTEST_'
     $text = $text -replace '\|cff00ccffGuild Workshop\|r', '|cff00ccffGuildWorkshopTest|r'
@@ -28,7 +29,7 @@ function Convert-GuildWorkshopToTest([string]$text) {
 }
 
 $luaFiles = @(
-    "Core.lua", "Workshops.lua", "Materials.lua", "Gems.lua", "GearPvp.lua", "Gear.lua", "Rooms.lua", "Stock.lua",
+    "Core.lua", "Workshops.lua", "CraftsTailoring.lua", "Materials.lua", "Gems.lua", "GearPvp.lua", "Gear.lua", "Rooms.lua", "Stock.lua",
     "Recipes.lua", "Tooltips.lua", "Sync.lua", "UI.lua", "Minimap.lua"
 )
 
@@ -75,6 +76,7 @@ $toc = @"
 
 Core.lua
 Workshops.lua
+CraftsTailoring.lua
 Materials.lua
 Gems.lua
 GearPvp.lua
