@@ -1,9 +1,9 @@
-# CurseForge / BigWigs packager config.
-# Packages only GuildWorkshop/ — GuildWorkshopTest and dev files are excluded.
-package-as: GuildWorkshop
+﻿# CurseForge / BigWigs packager config.
+# Packages only GuildieCrafts/ — GuildieCraftsTest and dev files are excluded.
+package-as: GuildieCrafts
 
 ignore:
-  - GuildWorkshopTest
+  - GuildieCraftsTest
   - scripts
   - WORKSHOP-GUIDELINES.md
   - PHASES.md

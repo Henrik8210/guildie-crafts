@@ -1,6 +1,6 @@
-# Phase content
+﻿# Phase content
 
-Guild Workshop tracks **scarce phase materials** and the crafts that consume them. When Blizzard adds a new TBC Anniversary phase, update this file and the addon data.
+Guildie Crafts tracks **scarce phase materials** and the crafts that consume them. When Blizzard adds a new TBC Anniversary phase, update this file and the addon data.
 
 ## TBC — Phase 3 (current)
 
@@ -17,6 +17,6 @@ Design workshops so each profession tab reuses the same patterns as JC: promoted
 
 ### Enabling a new phase
 
-1. Add the phase to `GuildWorkshop_EXPANSION_PHASES` in `GuildWorkshop/Workshops.lua`
+1. Add the phase to `GuildieCrafts_EXPANSION_PHASES` in `GuildieCrafts/Workshops.lua`
 2. Add gem IDs in `Gems.lua`, tailoring HoD crafts in `CraftsTailoring.lua`, and profession recipe scans in `Recipes.lua`
-3. Bump version in `GuildWorkshop.toc` and run `.\scripts\sync-guildworkshoptest.ps1`
+3. Bump version in `GuildieCrafts.toc` and run `.\scripts\sync-guildiecraftstest.ps1`

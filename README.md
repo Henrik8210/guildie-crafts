@@ -1,4 +1,4 @@
-# Guild Workshop
+﻿# Guildie Crafts
 
 Guild crafting workshops for **WoW TBC Anniversary** — organize orders, stock, and recipe coverage by profession and content phase.
 
@@ -15,8 +15,7 @@ Successor to [GemOrder](https://github.com/Henrik8210/wow-addons); GemOrder rema
 
 | Command | Action |
 |---------|--------|
-| `/guildworkshop` or `/gw` | Toggle main window |
-| `/guildwork` | Same as above |
+| `/guildiecrafts`, `/gc`, or `/gw` | Toggle main window |
 
 ## Development
 

@@ -1,0 +1,22 @@
+﻿## Interface: 20505, 20506
+## Title: Guildie Crafts
+## Notes: Guild crafting workshops for TBC Anniversary — orders, stock, and recipes by profession and phase.
+## Author: Henrik8210
+## Version: 2.0.0
+## SavedVariables: GuildieCraftsDB
+
+Core.lua
+Workshops.lua
+CraftsTailoring.lua
+Materials.lua
+Gems.lua
+GearPvp.lua
+Gear.lua
+Rooms.lua
+Stock.lua
+Recipes.lua
+Tooltips.lua
+Sync.lua
+UI.lua
+Minimap.lua
+Commands.lua

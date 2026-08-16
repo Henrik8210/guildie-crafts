@@ -1,5 +1,5 @@
-# Deploy GuildWorkshop and GuildWorkshopTest to the WoW AddOns folder.
-# Copies *contents* into each addon folder (avoids nested GuildWorkshop/GuildWorkshop/).
+﻿# Deploy GuildieCrafts and GuildieCraftsTest to the WoW AddOns folder.
+# Copies *contents* into each addon folder (avoids nested GuildieCrafts/GuildieCrafts/).
 # Run from repo root: .\scripts\deploy-to-wow.ps1
 
 param(
@@ -37,6 +37,14 @@ function Deploy-AddonFolder {
     Write-Host "Deployed $TargetName (v$version) -> $dst"
 }
 
-Deploy-AddonFolder -SourceName "GuildWorkshop" -TargetName "GuildWorkshop"
-Deploy-AddonFolder -SourceName "GuildWorkshopTest" -TargetName "GuildWorkshopTest"
+Deploy-AddonFolder -SourceName "GuildieCrafts" -TargetName "GuildieCrafts"
+Deploy-AddonFolder -SourceName "GuildieCraftsTest" -TargetName "GuildieCraftsTest"
+
+foreach ($legacy in @("GuildWorkshop", "GuildWorkshopTest")) {
+    $legacyPath = Join-Path $WowAddOns $legacy
+    if (Test-Path $legacyPath) {
+        Write-Host "Note: legacy addon folder still present at $legacyPath (disable or remove in WoW to avoid conflicts)"
+    }
+}
+
 Write-Host "Done. /reload in game."
