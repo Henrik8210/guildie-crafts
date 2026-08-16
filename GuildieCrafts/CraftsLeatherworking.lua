@@ -24,7 +24,7 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Swiftstrike Bracers",
-        itemId = 32581,
+        itemId = 32580,
         hodCost = 4,
         category = "Physical DPS",
         slot = "Wrist",
@@ -34,7 +34,7 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Swiftstrike Shoulders",
-        itemId = 32578,
+        itemId = 32581,
         hodCost = 2,
         category = "Physical DPS",
         slot = "Shoulder",
@@ -43,7 +43,7 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Living Earth Bindings",
-        itemId = 32579,
+        itemId = 32577,
         hodCost = 4,
         category = "Healer",
         slot = "Wrist",
@@ -52,7 +52,7 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Living Earth Shoulders",
-        itemId = 32580,
+        itemId = 32579,
         hodCost = 2,
         category = "Healer",
         slot = "Shoulder",
@@ -61,7 +61,7 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Bracers of Renewed Life",
-        itemId = 32577,
+        itemId = 32582,
         hodCost = 4,
         category = "Healer",
         slot = "Wrist",
@@ -70,16 +70,17 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Shoulderpads of Renewed Life",
-        itemId = 32576,
+        itemId = 32583,
         hodCost = 2,
         category = "Healer",
         slot = "Shoulder",
         class = "Leather",
         bind = "BoP",
     },
+    -- Mail — Shackled Souls (hunters / enhancement shamans)
     {
         name = "Bracers of Shackled Souls",
-        itemId = 32362,
+        itemId = 32399,
         hodCost = 1,
         category = "Shadow Resist",
         slot = "Wrist",
@@ -89,7 +90,7 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Waistguard of Shackled Souls",
-        itemId = 32393,
+        itemId = 32397,
         hodCost = 2,
         category = "Shadow Resist",
         slot = "Waist",
@@ -99,7 +100,7 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Greaves of Shackled Souls",
-        itemId = 32367,
+        itemId = 32400,
         hodCost = 3,
         category = "Shadow Resist",
         slot = "Legs",
@@ -108,8 +109,20 @@ GuildieCrafts_LeatherworkingCrafts = {
         set = "Shackled Souls",
     },
     {
+        name = "Boots of Shackled Souls",
+        itemId = 32398,
+        hodCost = 2,
+        category = "Shadow Resist",
+        slot = "Feet",
+        class = "Mail",
+        bind = "BoE",
+        set = "Shackled Souls",
+    },
+
+    -- Leather — Redeemed Soul (druids / rogues)
+    {
         name = "Redeemed Soul Wristguards",
-        itemId = 32396,
+        itemId = 32395,
         hodCost = 1,
         category = "Shadow Resist",
         slot = "Wrist",
@@ -119,7 +132,7 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Redeemed Soul Cinch",
-        itemId = 32394,
+        itemId = 32393,
         hodCost = 2,
         category = "Shadow Resist",
         slot = "Waist",
@@ -129,7 +142,7 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Redeemed Soul Legguards",
-        itemId = 32397,
+        itemId = 32396,
         hodCost = 3,
         category = "Shadow Resist",
         slot = "Legs",
@@ -139,7 +152,7 @@ GuildieCrafts_LeatherworkingCrafts = {
     },
     {
         name = "Redeemed Soul Moccasins",
-        itemId = 32395,
+        itemId = 32394,
         hodCost = 2,
         category = "Shadow Resist",
         slot = "Feet",

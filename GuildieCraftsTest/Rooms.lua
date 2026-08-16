@@ -177,8 +177,6 @@ function GuildieCraftsTest_CreateWorkshop(name, expansion, phase, profession)
     name = strtrim(name or "")
     expansion = expansion or GuildieCraftsTest_GetDefaultExpansion()
     phase = phase or GuildieCraftsTest_GetDefaultPhase()
-    profession = profession or "jewelcrafting"
-
     local player = UnitName("player")
     local room = {
         id = string.format("%s-%d", player, time()),

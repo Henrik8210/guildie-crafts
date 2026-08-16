@@ -5,7 +5,7 @@
 GuildieCrafts_BlacksmithingCrafts = {
     {
         name = "Dawnsteel Bracers",
-        itemId = 32568,
+        itemId = 32571,
         hodCost = 4,
         category = "Physical DPS",
         slot = "Wrist",
@@ -15,7 +15,7 @@ GuildieCrafts_BlacksmithingCrafts = {
     },
     {
         name = "Dawnsteel Shoulders",
-        itemId = 32569,
+        itemId = 32573,
         hodCost = 2,
         category = "Physical DPS",
         slot = "Shoulder",
@@ -24,7 +24,7 @@ GuildieCrafts_BlacksmithingCrafts = {
     },
     {
         name = "Swiftsteel Bracers",
-        itemId = 32572,
+        itemId = 32568,
         hodCost = 4,
         category = "Physical DPS",
         slot = "Wrist",
@@ -34,7 +34,7 @@ GuildieCrafts_BlacksmithingCrafts = {
     },
     {
         name = "Swiftsteel Shoulders",
-        itemId = 32573,
+        itemId = 32570,
         hodCost = 2,
         category = "Physical DPS",
         slot = "Shoulder",
@@ -43,7 +43,7 @@ GuildieCrafts_BlacksmithingCrafts = {
     },
     {
         name = "Shadesteel Bracers",
-        itemId = 32570,
+        itemId = 32403,
         hodCost = 1,
         category = "Shadow Resist",
         slot = "Wrist",
@@ -52,11 +52,31 @@ GuildieCrafts_BlacksmithingCrafts = {
         set = "Shadesteel",
     },
     {
-        name = "Shadesteel Greaves",
-        itemId = 32571,
+        name = "Shadesteel Girdle",
+        itemId = 32401,
         hodCost = 2,
         category = "Shadow Resist",
+        slot = "Waist",
+        class = "Plate",
+        bind = "BoE",
+        set = "Shadesteel",
+    },
+    {
+        name = "Shadesteel Greaves",
+        itemId = 32404,
+        hodCost = 3,
+        category = "Shadow Resist",
         slot = "Legs",
+        class = "Plate",
+        bind = "BoE",
+        set = "Shadesteel",
+    },
+    {
+        name = "Shadesteel Sabots",
+        itemId = 32402,
+        hodCost = 2,
+        category = "Shadow Resist",
+        slot = "Feet",
         class = "Plate",
         bind = "BoE",
         set = "Shadesteel",

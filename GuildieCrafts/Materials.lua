@@ -173,6 +173,9 @@ function GuildieCrafts_FormatCraftLabel(craft)
         return ""
     end
     local parts = {}
+    if craft.class and craft.class ~= "All" then
+        table.insert(parts, craft.class)
+    end
     if craft.slot then
         table.insert(parts, craft.slot)
     end

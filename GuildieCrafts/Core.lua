@@ -58,6 +58,15 @@ function GuildieCrafts_GetOrderStatusLabel(order)
                 GuildieCrafts_ColorizePlayer(assignee)
             )
         end
+    elseif order.status == "completed" then
+        local completer = order.updatedBy or order.assignedTo
+        if completer then
+            return string.format(
+                "|cff00ff00Completed - by %s|r",
+                GuildieCrafts_ColorizePlayer(completer)
+            )
+        end
+        return "|cff00ff00Completed|r"
     end
     return GuildieCrafts_GetStatusLabel(order.status)
 end
@@ -309,6 +318,39 @@ function GuildieCrafts_CreateOrder(gear, gems, notes, role)
     return order
 end
 
+function GuildieCrafts_GetCraftCategoryLabel(category)
+    if not category or category == "" then
+        return ""
+    end
+    return string.format("|cff%s%s|r", ROLE_DISPLAY_COLOR, category)
+end
+
+function GuildieCrafts_GetOrderHeaderTag(order)
+    if not order then
+        return ""
+    end
+    local isCraft = order.orderKind == "craft"
+    if not isCraft and (not order.gems or #order.gems == 0) then
+        isCraft = GuildieCrafts_GetCraftByItemId(order.itemId) ~= nil
+            or GuildieCrafts_GetCraftByName(order.item) ~= nil
+    end
+    if isCraft then
+        if order.role and GuildieCrafts_IsValidRole(order.role) then
+            return GuildieCrafts_GetRoleLabel(order.role)
+        end
+        if order.craftCategory and order.craftCategory ~= "" then
+            return GuildieCrafts_GetCraftCategoryLabel(order.craftCategory)
+        end
+        local craft = GuildieCrafts_GetCraftByItemId(order.itemId)
+            or GuildieCrafts_GetCraftByName(order.item)
+        if craft and craft.category then
+            return GuildieCrafts_GetCraftCategoryLabel(craft.category)
+        end
+        return ""
+    end
+    return GuildieCrafts_GetRoleLabel(order.role)
+end
+
 function GuildieCrafts_CreateCraftOrder(craft, notes, role)
     local player = UnitName("player")
     if not player then
@@ -359,6 +401,7 @@ function GuildieCrafts_CreateCraftOrder(craft, notes, role)
         materialCount = craft.hodCost or 1,
         notes = notes,
         role = role,
+        craftCategory = craft.category,
         status = "pending",
         created = time(),
         roomId = roomId,

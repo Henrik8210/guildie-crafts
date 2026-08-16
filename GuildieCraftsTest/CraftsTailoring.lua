@@ -58,7 +58,7 @@ GuildieCraftsTest_TailoringCrafts = {
     -- Healer (Swiftheal — Mooncloth / Primal Life)
     {
         name = "Swiftheal Wraps",
-        itemId = 32582,
+        itemId = 32584,
         hodCost = 4,
         category = "Healer",
         slot = "Wrist",
@@ -69,7 +69,7 @@ GuildieCraftsTest_TailoringCrafts = {
     },
     {
         name = "Swiftheal Mantle",
-        itemId = 32583,
+        itemId = 32585,
         hodCost = 2,
         category = "Healer",
         slot = "Shoulder",

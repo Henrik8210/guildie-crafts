@@ -7,7 +7,10 @@ GuildieCraftsTest_EXPANSION_PHASES = {
         expansion = "TBC",
         label = "TBC",
         enabled = true,
-        phases = { "Phase 3" },
+        phases = {
+            { phase = "Phase 3", label = "Phase 3", enabled = true },
+            { phase = "Phase 4", label = "Phase 4 (soon)", enabled = false },
+        },
     },
     {
         expansion = "WOTLK",
@@ -35,7 +38,7 @@ local CRAFTER_LABELS = {
 local PROFESSION_SPELL_IDS = {
     jewelcrafting = 28897,
     tailoring = 26790,
-    leatherworking = 26798,
+    leatherworking = 32549,
     blacksmithing = 29844,
 }
 
@@ -79,14 +82,22 @@ function GuildieCraftsTest_GetDefaultPhase()
     return DEFAULT_PHASE
 end
 
+local function NormalizePhaseEntry(phaseEntry)
+    if type(phaseEntry) == "table" then
+        return phaseEntry.phase, phaseEntry.label or phaseEntry.phase, phaseEntry.enabled ~= false
+    end
+    return phaseEntry, phaseEntry, true
+end
+
 function GuildieCraftsTest_GetExpansionPhaseOptions()
     local options = {}
     for _, entry in ipairs(GuildieCraftsTest_EXPANSION_PHASES) do
-        for _, phase in ipairs(entry.phases or {}) do
+        for _, phaseEntry in ipairs(entry.phases or {}) do
+            local phase, label = NormalizePhaseEntry(phaseEntry)
             table.insert(options, {
                 expansion = entry.expansion,
                 phase = phase,
-                label = entry.label .. " — " .. phase,
+                label = entry.label .. " — " .. label,
             })
         end
     end
@@ -109,10 +120,12 @@ function GuildieCraftsTest_GetPhaseOptions(expansionId)
     local phases = {}
     for _, entry in ipairs(GuildieCraftsTest_EXPANSION_PHASES) do
         if entry.expansion == expansionId then
-            for _, phase in ipairs(entry.phases or {}) do
+            for _, phaseEntry in ipairs(entry.phases or {}) do
+                local phase, label, enabled = NormalizePhaseEntry(phaseEntry)
                 table.insert(phases, {
                     phase = phase,
-                    label = phase,
+                    label = label,
+                    enabled = enabled,
                 })
             end
             break
@@ -177,7 +190,19 @@ function GuildieCraftsTest_GetWorkshopPortraitIcon(room)
     if not room then
         return DEFAULT_WORKSHOP_PORTRAIT
     end
-    return GuildieCraftsTest_GetProfessionIcon(GuildieCraftsTest_GetRoomProfession(room))
+    return GuildieCraftsTest_GetProfessionPortraitIcon(GuildieCraftsTest_GetRoomProfession(room))
+end
+
+function GuildieCraftsTest_GetProfessionPortraitIcon(professionId)
+    if not professionId then
+        return DEFAULT_WORKSHOP_PORTRAIT
+    end
+    local spellId = PROFESSION_SPELL_IDS[professionId]
+    local resolved = ResolveSpellIcon(spellId)
+    if resolved then
+        return resolved
+    end
+    return PROFESSION_ICONS[professionId] or DEFAULT_WORKSHOP_PORTRAIT
 end
 
 function GuildieCraftsTest_FormatWorkshopScope(room)
@@ -211,7 +236,7 @@ function GuildieCraftsTest_ValidateWorkshopDefinition(name, expansion, phase, pr
 
     local validPhase = false
     for _, option in ipairs(GuildieCraftsTest_GetPhaseOptions(expansion)) do
-        if option.phase == phase then
+        if option.phase == phase and option.enabled ~= false then
             validPhase = true
             break
         end

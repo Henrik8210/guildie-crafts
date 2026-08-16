@@ -58,6 +58,15 @@ function GuildieCraftsTest_GetOrderStatusLabel(order)
                 GuildieCraftsTest_ColorizePlayer(assignee)
             )
         end
+    elseif order.status == "completed" then
+        local completer = order.updatedBy or order.assignedTo
+        if completer then
+            return string.format(
+                "|cff00ff00Completed - by %s|r",
+                GuildieCraftsTest_ColorizePlayer(completer)
+            )
+        end
+        return "|cff00ff00Completed|r"
     end
     return GuildieCraftsTest_GetStatusLabel(order.status)
 end
@@ -309,6 +318,39 @@ function GuildieCraftsTest_CreateOrder(gear, gems, notes, role)
     return order
 end
 
+function GuildieCraftsTest_GetCraftCategoryLabel(category)
+    if not category or category == "" then
+        return ""
+    end
+    return string.format("|cff%s%s|r", ROLE_DISPLAY_COLOR, category)
+end
+
+function GuildieCraftsTest_GetOrderHeaderTag(order)
+    if not order then
+        return ""
+    end
+    local isCraft = order.orderKind == "craft"
+    if not isCraft and (not order.gems or #order.gems == 0) then
+        isCraft = GuildieCraftsTest_GetCraftByItemId(order.itemId) ~= nil
+            or GuildieCraftsTest_GetCraftByName(order.item) ~= nil
+    end
+    if isCraft then
+        if order.role and GuildieCraftsTest_IsValidRole(order.role) then
+            return GuildieCraftsTest_GetRoleLabel(order.role)
+        end
+        if order.craftCategory and order.craftCategory ~= "" then
+            return GuildieCraftsTest_GetCraftCategoryLabel(order.craftCategory)
+        end
+        local craft = GuildieCraftsTest_GetCraftByItemId(order.itemId)
+            or GuildieCraftsTest_GetCraftByName(order.item)
+        if craft and craft.category then
+            return GuildieCraftsTest_GetCraftCategoryLabel(craft.category)
+        end
+        return ""
+    end
+    return GuildieCraftsTest_GetRoleLabel(order.role)
+end
+
 function GuildieCraftsTest_CreateCraftOrder(craft, notes, role)
     local player = UnitName("player")
     if not player then
@@ -359,6 +401,7 @@ function GuildieCraftsTest_CreateCraftOrder(craft, notes, role)
         materialCount = craft.hodCost or 1,
         notes = notes,
         role = role,
+        craftCategory = craft.category,
         status = "pending",
         created = time(),
         roomId = roomId,
