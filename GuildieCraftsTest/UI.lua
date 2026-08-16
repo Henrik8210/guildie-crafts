@@ -1051,9 +1051,7 @@ function UI:RefreshWorkshopMembers()
     end
 
     panel.membersHelp:ClearAllPoints()
-    if panel.closeBtn:IsShown() then
-        panel.membersHelp:SetPoint("TOPLEFT", panel.closeBtn, "BOTTOMLEFT", 0, -WORKSHOP_SECTION_GAP)
-    elseif panel.changeWorkshopBtn:IsShown() then
+    if panel.changeWorkshopBtn:IsShown() then
         panel.membersHelp:SetPoint("TOPLEFT", panel.changeWorkshopBtn, "BOTTOMLEFT", 0, -WORKSHOP_SECTION_GAP)
     else
         panel.membersHelp:SetPoint("TOPLEFT", panel.status, "BOTTOMLEFT", 0, -WORKSHOP_SECTION_GAP)
@@ -1112,7 +1110,7 @@ function UI:RefreshWorkshopMembers()
 
                 local btn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
                 btn:SetSize(width, 22)
-                btn:SetPoint("RIGHT", right, 0)
+                btn:SetPoint("RIGHT", row, "RIGHT", right, 0)
                 btn:SetText(text)
                 btn:SetScript("OnClick", onClick)
                 right = right - width - 4
@@ -1255,6 +1253,7 @@ function UI:RefreshWorkshopPanel()
         panel.changeWorkshopBtn:Show()
         if canManageWorkshop then
             panel.closeBtn:SetPoint("LEFT", panel.changeWorkshopBtn, "RIGHT", 8, 0)
+            panel.closeBtn:SetPoint("TOP", panel.changeWorkshopBtn, "TOP", 0, 0)
             panel.closeBtn:Show()
         else
             panel.closeBtn:Hide()
@@ -3189,11 +3188,15 @@ function UI:Refresh()
     end
 
     if GuildieCraftsTest_HasJoinedWorkshop() and room then
-        self.frame.roomLabel:SetText(string.format(
-            "Workshop: |cff00ff00%s|r  |cff888888(%s)|r",
-            room.name,
-            GuildieCraftsTest_FormatWorkshopScope(room)
-        ))
+        if self.activeTab == "workshop" then
+            self.frame.roomLabel:SetText("")
+        else
+            self.frame.roomLabel:SetText(string.format(
+                "Workshop: |cff00ff00%s|r  |cff888888(%s)|r",
+                room.name,
+                GuildieCraftsTest_FormatWorkshopScope(room)
+            ))
+        end
     else
         self.frame.roomLabel:SetText("|cffffcc00Select a workshop on the Workshop tab to unlock Orders, Stock and Recipes.|r")
     end
