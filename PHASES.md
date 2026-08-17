@@ -23,6 +23,8 @@ All four professions are live in Phase 3. JC tracks epic gems; Tailoring, Leathe
 
 Run `.\scripts\check-craft-categories.ps1` to verify every craft is in the correct category before shipping.
 
+Release history: [CHANGELOG.md](CHANGELOG.md).
+
 **Phase 4** and **WOTLK** appear in the workshop picker as disabled “coming soon” options until content is added.
 
 Design workshops so each profession tab reuses the same patterns as JC: promoted crafters, phase stock, recipe coverage, and an order modal for that profession’s Phase 3 materials.

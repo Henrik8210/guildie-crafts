@@ -12,7 +12,8 @@ Successor to [GemOrder](https://github.com/Henrik8210/wow-addons); GemOrder rema
 - **Jewelcrafting** — order queue, epic gem stock, recipe coverage, PVE/PVP socket orders
 - **Tailoring** — Heart of Darkness stock, all 9 Phase 3 craft recipes, and craft orders
 - **Leatherworking / Blacksmithing (v2.1)** — HoD stock, Phase 3 craft orders, and recipe coverage (same patterns as Tailoring)
-- **Workshop picker** — select an existing workshop or create a new one; profession icons in the main window portrait
+- **Workshop notifications (v2.2)** — crafters alerted on new orders; order owners alerted on pickup/completion; minimap pulse + tooltip until you open the UI
+- **Order status bands** — New / Pending / In progress / Completed slips on the order queue
 
 ## Commands
 

@@ -367,6 +367,9 @@ function Sync:OnAddonMessage(prefix, message, channel, sender)
         end
         GuildieCraftsTestDB.orders[order.id] = order
         GuildieCraftsTest_AppendOrderToQueue(roomId, order.id)
+        if not existing and GuildieCraftsTest_NotifyNewOrder then
+            GuildieCraftsTest_NotifyNewOrder(order, room)
+        end
         if GuildieCraftsTest.UI then
             GuildieCraftsTest_RefreshUI()
         end
@@ -381,6 +384,9 @@ function Sync:OnAddonMessage(prefix, message, channel, sender)
                 order.assignedTo = parts[6]
             elseif order.status == "in_progress" and order.updatedBy then
                 order.assignedTo = order.updatedBy
+            end
+            if GuildieCraftsTest_NotifyOrderStatus then
+                GuildieCraftsTest_NotifyOrderStatus(order, parts[4])
             end
             if GuildieCraftsTest.UI then
                 GuildieCraftsTest_RefreshUI()

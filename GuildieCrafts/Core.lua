@@ -71,7 +71,43 @@ function GuildieCrafts_GetOrderStatusLabel(order)
     return GuildieCrafts_GetStatusLabel(order.status)
 end
 
-GuildieCrafts.VERSION = "2.1.0"
+function GuildieCrafts_GetSeenOrderIds()
+    GuildieCraftsDB.settings = GuildieCraftsDB.settings or {}
+    GuildieCraftsDB.settings.seenOrderIds = GuildieCraftsDB.settings.seenOrderIds or {}
+    return GuildieCraftsDB.settings.seenOrderIds
+end
+
+function GuildieCrafts_IsOrderNewToViewer(order)
+    if not order or not order.id or order.status ~= "pending" then
+        return false
+    end
+    return GuildieCrafts_GetSeenOrderIds()[order.id] ~= true
+end
+
+function GuildieCrafts_GetPendingOrderBandLabel(order)
+    if GuildieCrafts_IsOrderNewToViewer(order) then
+        return "|cffFFAA00New|r"
+    end
+    return GuildieCrafts_GetStatusLabel("pending")
+end
+
+function GuildieCrafts_MarkPendingOrdersSeen()
+    local seen = GuildieCrafts_GetSeenOrderIds()
+    for _, order in ipairs(GuildieCrafts_GetActiveOrders()) do
+        if order.status == "pending" and order.id then
+            seen[order.id] = true
+        end
+    end
+end
+
+function GuildieCrafts_MarkOrderSeen(orderId)
+    if not orderId then
+        return
+    end
+    GuildieCrafts_GetSeenOrderIds()[orderId] = true
+end
+
+GuildieCrafts.VERSION = "2.2.0"
 
 function GuildieCrafts_GetVersion()
     return GuildieCrafts.VERSION
@@ -721,6 +757,10 @@ local function TryGuildSync()
 
     if GuildieCrafts.UI and GuildieCrafts.UI.frame then
         GuildieCrafts.UI:Refresh()
+    end
+
+    if GuildieCrafts_ScheduleMissedNotificationCheck then
+        GuildieCrafts_ScheduleMissedNotificationCheck(3)
     end
 
     return true

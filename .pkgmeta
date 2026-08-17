@@ -8,5 +8,6 @@ ignore:
   - WORKSHOP-GUIDELINES.md
   - PHASES.md
   - README.md
+  - CHANGELOG.md
   - .cursor
   - .gitignore

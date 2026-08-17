@@ -417,6 +417,10 @@ function GuildieCraftsTest_IsPromotedJewelcrafter(room, player)
     return room.collaborators and room.collaborators[player] == true
 end
 
+function GuildieCraftsTest_IsPromotedCrafter(room, player)
+    return GuildieCraftsTest_IsPromotedJewelcrafter(room, player)
+end
+
 function GuildieCraftsTest_GetWorkshopStockContributors(room)
     local names = {}
     if not room then

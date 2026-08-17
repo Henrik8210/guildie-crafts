@@ -156,7 +156,7 @@ local function GreyGem(name)
 end
 
 local function GetOrderRowBandExtra(order)
-    if order and (order.status == "in_progress" or order.status == "completed") then
+    if order and (order.status == "pending" or order.status == "in_progress" or order.status == "completed") then
         return ORDER_ROW_IN_PROGRESS_BAND
     end
     return 0
@@ -176,6 +176,16 @@ local function AttachTextPulseAnimation(fontString, parent)
 end
 
 local ORDER_STATUS_BAND_STYLES = {
+    new = {
+        bg = { 0.32, 0.18, 0.06, 0.92 },
+        line = { 0.78, 0.45, 0.15, 0.55 },
+        pulse = true,
+    },
+    pending = {
+        bg = { 0.24, 0.20, 0.06, 0.92 },
+        line = { 0.65, 0.55, 0.20, 0.55 },
+        pulse = false,
+    },
     in_progress = {
         bg = { 0.08, 0.20, 0.36, 0.92 },
         line = { 0.35, 0.55, 0.78, 0.55 },
@@ -188,8 +198,25 @@ local ORDER_STATUS_BAND_STYLES = {
     },
 }
 
-local function CreateOrderStatusBand(row, order, contentWidth)
+local function GetOrderStatusBandConfig(order)
+    if not order then
+        return nil, ""
+    end
+    if order.status == "pending" then
+        if GuildieCraftsTest_IsOrderNewToViewer(order) then
+            return ORDER_STATUS_BAND_STYLES.new, GuildieCraftsTest_GetPendingOrderBandLabel(order)
+        end
+        return ORDER_STATUS_BAND_STYLES.pending, GuildieCraftsTest_GetPendingOrderBandLabel(order)
+    end
     local style = ORDER_STATUS_BAND_STYLES[order.status]
+    if not style then
+        return nil, ""
+    end
+    return style, GuildieCraftsTest_GetOrderStatusLabel(order)
+end
+
+local function CreateOrderStatusBand(row, order, contentWidth)
+    local style, label = GetOrderStatusBandConfig(order)
     if not style then
         return
     end
@@ -210,7 +237,7 @@ local function CreateOrderStatusBand(row, order, contentWidth)
 
     local statusText = band:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     statusText:SetPoint("CENTER", band, "CENTER", 0, 0)
-    statusText:SetText(GuildieCraftsTest_GetOrderStatusLabel(order))
+    statusText:SetText(label)
     if style.pulse then
         AttachTextPulseAnimation(statusText, band)
     end
@@ -876,6 +903,10 @@ end
 function UI:ShowTab(tabId, skipAccessCheck)
     SafeCloseDropdownMenus()
     self:CloseOrderDialog()
+
+    if self.activeTab == "orders" and tabId ~= "orders" and GuildieCraftsTest_MarkPendingOrdersSeen then
+        GuildieCraftsTest_MarkPendingOrdersSeen()
+    end
 
     if not skipAccessCheck and (tabId == "orders" or tabId == "completed" or tabId == "stock" or tabId == "recipes") and not GuildieCraftsTest_HasJoinedWorkshop() then
         tabId = "workshop"
@@ -3187,7 +3218,7 @@ function UI:CreateOrderRow(order, yOffset)
     highlight:SetAlpha(order.status == "pending" and 0.12 or 0.04)
 
     local bandExtra = GetOrderRowBandExtra(order)
-    if order.status == "in_progress" or order.status == "completed" then
+    if order.status == "pending" or order.status == "in_progress" or order.status == "completed" then
         CreateOrderStatusBand(row, order, contentWidth)
     end
 
@@ -3195,7 +3226,7 @@ function UI:CreateOrderRow(order, yOffset)
     local title = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     title:SetPoint("TOPLEFT", 10, -headerY)
     local headerTag = GuildieCraftsTest_GetOrderHeaderTag(order)
-    if order.status == "in_progress" or order.status == "completed" then
+    if order.status == "pending" or order.status == "in_progress" or order.status == "completed" then
         title:SetText(string.format(
             "%s%s%s",
             GuildieCraftsTest_ColorizePlayer(order.player, order.class),
@@ -3531,12 +3562,18 @@ function UI:Toggle()
         SafeCloseDropdownMenus()
         self.frame:Hide()
     else
+        if GuildieCraftsTest.Minimap and GuildieCraftsTest.Minimap.StopPulse then
+            GuildieCraftsTest.Minimap:StopPulse()
+        end
         self:SafeRefresh()
         self.frame:Show()
     end
 end
 
 function UI:Show()
+    if GuildieCraftsTest.Minimap and GuildieCraftsTest.Minimap.StopPulse then
+        GuildieCraftsTest.Minimap:StopPulse()
+    end
     self:SafeRefresh()
     self.frame:Show()
 end
@@ -3551,6 +3588,9 @@ function UI:SafeRefresh()
 end
 
 function UI:Hide()
+    if self.activeTab == "orders" and GuildieCraftsTest_MarkPendingOrdersSeen then
+        GuildieCraftsTest_MarkPendingOrdersSeen()
+    end
     SafeCloseDropdownMenus()
     self.frame:Hide()
 end

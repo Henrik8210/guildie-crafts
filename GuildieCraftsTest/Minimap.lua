@@ -68,6 +68,7 @@ function MinimapBtn:Init()
     button:RegisterForDrag("LeftButton")
 
     button:SetScript("OnClick", function(_, mouseButton)
+        MinimapBtn:StopPulse()
         if not GuildieCraftsTest_EnsureUI() then
             return
         end
@@ -103,9 +104,21 @@ function MinimapBtn:Init()
 
     button:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText("GuildieCraftsTest", 1, 1, 1)
-        GameTooltip:AddLine("Left-click: open orders", 1, 0.82, 0)
-        GameTooltip:AddLine("Drag to move icon", 1, 0.82, 0)
+        GameTooltip:SetText("Guildie Crafts", 1, 1, 1)
+
+        local pending = GuildieCraftsTest_GetPendingNotifications and GuildieCraftsTest_GetPendingNotifications() or {}
+        if #pending > 0 then
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("Notifications:", 1, 0.82, 0)
+            for _, message in ipairs(pending) do
+                GameTooltip:AddLine(message, 1, 1, 1, true)
+            end
+        end
+
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine("Left-click: open orders", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine("Right-click: workshop", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine("Drag to move icon", 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
 
@@ -116,4 +129,47 @@ function MinimapBtn:Init()
     UpdatePosition(button)
     button:Show()
     self.button = button
+end
+
+function MinimapBtn:EnsurePulseFrame()
+    if self.pulseFrame then
+        return self.pulseFrame
+    end
+
+    local frame = CreateFrame("Frame")
+    frame:Hide()
+    frame:SetScript("OnUpdate", function()
+        local button = MinimapBtn.button
+        if not button or not MinimapBtn.pulseActive then
+            frame:Hide()
+            if button then
+                button:SetAlpha(1)
+            end
+            return
+        end
+        button:SetAlpha(0.35 + 0.65 * math.abs(math.sin(GetTime() * 3)))
+    end)
+    self.pulseFrame = frame
+    return frame
+end
+
+function MinimapBtn:Pulse()
+    if not self.button then
+        return
+    end
+    self.pulseActive = true
+    self:EnsurePulseFrame():Show()
+end
+
+function MinimapBtn:StopPulse()
+    self.pulseActive = false
+    if self.pulseFrame then
+        self.pulseFrame:Hide()
+    end
+    if self.button then
+        self.button:SetAlpha(1)
+    end
+    if GuildieCraftsTest_ClearPendingNotifications then
+        GuildieCraftsTest_ClearPendingNotifications()
+    end
 end
