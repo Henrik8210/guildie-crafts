@@ -17,8 +17,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # BigWigs packager expects GuildieCrafts.toc at checkout root; our addon lives in GuildieCrafts/.
+      - name: Flatten addon for packager
+        run: |
+          cp -a GuildieCrafts/. .
+          rm -rf GuildieCrafts
+
       - uses: BigWigsMods/packager@v2
-        with:
-          args: -t GuildieCrafts -m .pkgmeta
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}

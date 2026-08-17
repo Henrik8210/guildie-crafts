@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.8
+
+- Fix GitHub Actions release: flatten `GuildieCrafts/` for BigWigs packager before upload.
+
 ## v2.2.7
 
 - Fix GitHub Actions: run packager with `-t GuildieCrafts` so nested addon layout packages correctly.
