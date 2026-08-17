@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.2.1
+
+- **New addon icon** — guild knights around a blacksmith at the forge (minimap + workshop UI).
+- **CurseForge packaging** — `.pkgmeta` manual changelog wired to `CHANGELOG.md`.
+
 ## v2.2.0
 
 - **Crafter notifications** — promoted crafters get a chat alert, sound, and pulsing minimap icon when a new order arrives (all workshop types).

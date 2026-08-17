@@ -1,13 +1,21 @@
-﻿# CurseForge / BigWigs packager config.
-# Packages only GuildieCrafts/ — GuildieCraftsTest and dev files are excluded.
+﻿# CurseForge / BigWigs packager (repo root — not inside GuildieCrafts/).
+# Triggers: push a version tag (e.g. v2.2.1) after saving Source on CurseForge.
+
 package-as: GuildieCrafts
+enable-nolib-creation: no
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
 
 ignore:
   - GuildieCraftsTest
   - scripts
+  - Art
   - WORKSHOP-GUIDELINES.md
   - PHASES.md
   - README.md
   - CHANGELOG.md
+  - RELEASE_NOTES_v2.2.0.md
   - .cursor
   - .gitignore
