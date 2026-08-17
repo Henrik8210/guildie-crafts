@@ -19,5 +19,6 @@ ignore:
   - CHANGELOG.md
   - RELEASE_NOTES_v2.2.0.md
   - RELEASE_NOTES_v2.2.1.md
+  - RELEASE_NOTES_v2.2.2.md
   - .cursor
   - .gitignore

@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.3
+
+- Republish — same addon content as v2.2.2; triggers CurseForge automatic packaging.
+
 ## v2.2.2
 
 - **Icon color fix** — corrected red/blue channel swap in PNG→TGA export; minimap and UI portrait now show the warm forge colors.

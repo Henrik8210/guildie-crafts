@@ -2,7 +2,7 @@
 ## Title: Guildie Crafts
 ## Notes: Guild crafting workshops for TBC Anniversary — orders, stock, and recipes by profession and phase.
 ## Author: Henrik8210
-## Version: 2.2.2
+## Version: 2.2.3
 ## SavedVariables: GuildieCraftsDB
 
 Core.lua
