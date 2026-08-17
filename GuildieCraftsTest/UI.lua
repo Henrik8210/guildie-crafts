@@ -2298,6 +2298,15 @@ function UI:RefreshGemDropdownLabels()
     end
 end
 
+function UI:RefreshCraftDropdownLabel()
+    local f = self.frame
+    if not f or not f.craftDropdown or not f.selectedCraft then
+        return
+    end
+
+    SetDropdownDisplayText(f.craftDropdown, GuildieCraftsTest_FormatCraftDropdownLabel(f.selectedCraft))
+end
+
 function UI:UpdateOrderDialogPortrait(_room)
     local dialog = self.frame and self.frame.orderDialog
     if not dialog or not dialog.portraitIconTex then
@@ -2433,12 +2442,13 @@ function UI:PopulateCraftDropdown(dropdown, frameRef)
 
     for _, craft in ipairs(GuildieCraftsTest_GetCraftsByCategory(professionId, category)) do
         local info = UIDropDownMenu_CreateInfo()
-        info.text = GuildieCraftsTest_FormatCraftLabel(craft)
+        local label = GuildieCraftsTest_FormatCraftDropdownLabel(craft)
+        info.text = label
         info.value = craft.itemId
         MarkDropdownSelection(info, frameRef.selectedCraft and frameRef.selectedCraft.itemId == craft.itemId)
         info.func = function()
             frameRef.selectedCraft = craft
-            SetDropdownDisplayText(dropdown, craft.name)
+            SetDropdownDisplayText(dropdown, label)
             if frameRef.craftWarning then
                 if GuildieCraftsTest_WorkshopHasRecipeForCraft(craft.name) then
                     frameRef.craftWarning:Hide()
@@ -2699,6 +2709,7 @@ function UI:RefreshOrderFormWarnings()
                 f.craftWarning:Show()
             end
         end
+        self:RefreshCraftDropdownLabel()
         self:RelayoutOrderForm()
         return
     end
@@ -3526,6 +3537,10 @@ function UI:Refresh()
 
     if self.activeTab == "orders" or self.activeTab == "completed" then
         self:LayoutQueuePanel()
+    end
+
+    if self.frame.orderDialog and self.frame.orderDialog:IsShown() then
+        self:RefreshOrderFormWarnings()
     end
 
     self:ClearRows()

@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.2.10
+
+- **HoD craft order dropdowns** — Tailoring, Leatherworking, and Blacksmithing order modals now show recipe-known indicators (green check / red X) like Jewelcrafting gem picks.
+- **Docs** — CurseForge publishing is GitHub Actions only; GitHub webhook must stay disabled (duplicate/incomplete uploads).
+
 ## v2.2.9
 
 - **Fix CurseForge packaging** — use `.pkgmeta` `move-folders` for nested `GuildieCrafts/` layout; remove broken CI flatten step that uploaded an empty zip (only stray PNGs). Remove obsolete `assets/art-source/` from repo.

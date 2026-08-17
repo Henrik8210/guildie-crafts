@@ -4,7 +4,7 @@ Guild crafting workshops for **WoW TBC Anniversary** — organize orders, stock,
 
 Successor to [GemOrder](https://github.com/Henrik8210/wow-addons); GemOrder remains on CurseForge for existing users.
 
-**CurseForge:** push a version tag → GitHub Actions uploads via BigWigs packager (see [WORKSHOP-GUIDELINES.md](WORKSHOP-GUIDELINES.md) → **CurseForge release**). Logo: [Art/GuildieCrafts-Logo.png](Art/GuildieCrafts-Logo.png).
+**CurseForge:** push a version tag → GitHub Actions uploads (webhook disabled; see [WORKSHOP-GUIDELINES.md](WORKSHOP-GUIDELINES.md) → **CurseForge release**). Logo: [Art/GuildieCrafts-Logo.png](Art/GuildieCrafts-Logo.png).
 
 ## Features
 

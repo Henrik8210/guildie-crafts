@@ -507,6 +507,37 @@ function GuildieCraftsTest_FormatGemDropdownLabel(gemName)
     return indicator .. gemName
 end
 
+function GuildieCraftsTest_GetCraftRecipeIndicatorText(craftName)
+    if not craftName or craftName == "" then
+        return ""
+    end
+
+    local craft = GuildieCraftsTest_GetCraftByName(craftName)
+    if not craft or not craft.itemId then
+        return ""
+    end
+
+    if GuildieCraftsTest_WorkshopHasRecipeForCraft(craftName) then
+        return RECIPE_KNOWN_ICON .. " "
+    end
+
+    return RECIPE_MISSING_ICON .. " "
+end
+
+function GuildieCraftsTest_FormatCraftDropdownLabel(craft)
+    if not craft then
+        return ""
+    end
+
+    local base = GuildieCraftsTest_FormatCraftLabel(craft)
+    local indicator = GuildieCraftsTest_GetCraftRecipeIndicatorText(craft.name)
+    if indicator == "" then
+        return base
+    end
+
+    return indicator .. base
+end
+
 local function QueuePassiveRecipeScan()
     if not GuildieCraftsTest_ShouldShareRecipes() or not GuildieCraftsTest_HasJoinedWorkshop() then
         return

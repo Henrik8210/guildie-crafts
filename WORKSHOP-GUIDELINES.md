@@ -51,9 +51,9 @@ Legacy manual path (same result):
 
 **The right way (what actually works):** push a version tag → **GitHub Actions** runs [BigWigs packager](https://github.com/BigWigsMods/packager) → uploads to CurseForge via the [Upload API](https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-api).
 
-Pushing to `main` alone does **not** publish. Only pushing a **version tag** (`v2.2.8`) triggers `.github/workflows/release.yml`.
+Pushing to `main` alone does **not** publish. Only pushing a **version tag** (`v2.2.10`) triggers `.github/workflows/release.yml`.
 
-Official webhook docs ([Automatic Packaging](https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging)) exist but are **unreliable** for this repo layout — see [Why not webhook-only?](#why-not-webhook-only) below.
+**Do not use the GitHub → CurseForge webhook.** It is **disabled** on this repo and must stay that way. Tag pushes previously produced duplicate uploads (e.g. `v2.2.9` and `v2.2.9-bcc`); the webhook build also omitted `Art/` because `.pkgmeta` ignores repo-root `Art/`. See [Why not the webhook?](#why-not-the-webhook) below.
 
 ### One-time setup
 
@@ -62,8 +62,8 @@ Official webhook docs ([Automatic Packaging](https://support.curseforge.com/supp
 | Project ID | CurseForge → Overview | **1655417** (also in `## X-Curse-Project-ID` in toc) |
 | API token | [authors.curseforge.com → API tokens](https://authors.curseforge.com/#/settings/api-tokens) | Create token (e.g. “GitHub Actions”) |
 | GitHub secret | Repo → Settings → Secrets → Actions | Name **`CF_API_KEY`**, value = API token |
-| Source (optional) | CurseForge → Source | GitHub URL + “Package any new tagged commits” + **Save** |
-| Webhook (optional) | GitHub → Settings → Webhooks | `https://www.curseforge.com/api/projects/1655417/package?token={token}` — see caveats below |
+| Source (optional) | CurseForge → Source | GitHub URL + “Package any new tagged commits” + **Save** (metadata only; uploads come from Actions) |
+| Webhook | GitHub → Settings → Webhooks | **Leave inactive.** Was `…/api/projects/1655417/package?token=…` — causes duplicate/incomplete releases if enabled |
 
 No GitHub OAuth is required on the CurseForge Source page; URL + secret is enough.
 
@@ -138,15 +138,20 @@ Local dev layout (`GuildieCrafts/` folder, `deploy-to-wow.ps1`) is unchanged.
 | Contains `beta` | Beta |
 | `v2.2.8`, etc. | Release |
 
-### Why not webhook-only?
+### Why not the webhook?
 
-The CurseForge webhook (`/api/projects/{id}/package?token=`) can return `{"success":true}` without creating a file. Known issues for this repo:
+Publishing is **GitHub Actions + `CF_API_KEY` only**. The CurseForge webhook (`/api/projects/{id}/package?token=`) must stay **inactive** on GitHub:
+
+- **Duplicate uploads** — one tag produced both `v2.2.9-bcc` (Actions, correct) and `v2.2.9` (webhook).
+- **Incomplete webhook zip** — missing `GuildieCrafts/Art/` (minimap/UI icons); `.pkgmeta` `ignore: Art` is applied too broadly on CurseForge’s packager.
+- **Unreliable** — can return `{"success":true}` without a file; tag-delete events do not package.
+
+Official webhook docs: [Automatic Packaging](https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging) (reference only — not used for this project).
+
+Other packaging notes:
 
 - Packager needs `.pkgmeta` `move-folders` for nested `GuildieCrafts/` — **do not flatten** in CI (v2.2.8 uploaded an empty zip).
-- Webhook deliveries for **tag delete** (`"deleted": true`) do not package; only **tag create** (`"created": true`) should.
 - `.pkgmeta` with a UTF-8 BOM breaks YAML parsing (fixed in v2.2.4+).
-
-**Use GitHub Actions + `CF_API_KEY` as the supported path.** Keep the webhook if you want, but do not rely on it.
 
 ### Agent instructions
 
