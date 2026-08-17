@@ -18,6 +18,7 @@ ignore:
   - RELEASE_NOTES_v2.2.1.md
   - RELEASE_NOTES_v2.2.2.md
   - RELEASE_NOTES_v2.2.3.md
+  - RELEASE_NOTES_v2.2.4.md
   - .cursor
   - .gitignore
   - .github

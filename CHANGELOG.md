@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.5
+
+- Publish via GitHub Actions now that CurseForge `CF_API_KEY` is configured.
+
 ## v2.2.4
 
 - **CurseForge packaging** — fix `.pkgmeta` (remove BOM, doc-style `manual-changelog`), add `## X-Curse-Project-ID`, exclude debug code from packages, GitHub Actions release workflow.
