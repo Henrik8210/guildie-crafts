@@ -49,92 +49,106 @@ Legacy manual path (same result):
 
 ## CurseForge release
 
-Official docs: [Automatic Packaging](https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging).
+**The right way (what actually works):** push a version tag → **GitHub Actions** runs [BigWigs packager](https://github.com/BigWigsMods/packager) → uploads to CurseForge via the [Upload API](https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-api).
 
-CurseForge packages from GitHub when a **tagged commit** is pushed (with “package tagged commits” enabled). Pushing to `main` alone does **not** publish a new file — only pushing a **version tag** does.
+Pushing to `main` alone does **not** publish. Only pushing a **version tag** (`v2.2.8`) triggers `.github/workflows/release.yml`.
 
-### Project setup (one-time)
+Official webhook docs ([Automatic Packaging](https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging)) exist but are **unreliable** for this repo layout — see [Why not webhook-only?](#why-not-webhook-only) below.
 
-**1. CurseForge → Project → Source**
+### One-time setup
 
-| Setting | Value |
-|---------|--------|
-| Source code | GitHub |
-| Repository URL | `https://github.com/Henrik8210/guildie-crafts` |
-| Automatic packaging | **Package any new tagged commits** (not “package all commits”) |
+| Step | Where | What |
+|------|--------|------|
+| Project ID | CurseForge → Overview | **1655417** (also in `## X-Curse-Project-ID` in toc) |
+| API token | [authors.curseforge.com → API tokens](https://authors.curseforge.com/#/settings/api-tokens) | Create token (e.g. “GitHub Actions”) |
+| GitHub secret | Repo → Settings → Secrets → Actions | Name **`CF_API_KEY`**, value = API token |
+| Source (optional) | CurseForge → Source | GitHub URL + “Package any new tagged commits” + **Save** |
+| Webhook (optional) | GitHub → Settings → Webhooks | `https://www.curseforge.com/api/projects/1655417/package?token={token}` — see caveats below |
 
-**2. GitHub webhook** (required for packaging to trigger — linking the repo in Source alone is not enough)
+No GitHub OAuth is required on the CurseForge Source page; URL + secret is enough.
 
-1. CurseForge → **API tokens** → create a token (e.g. name “Webhooks”).
-2. CurseForge → Project → **Overview** → **About This Project** → note the **project ID**.
-3. GitHub repo → **Settings** → **Webhooks** → **Add webhook**:
-   - **Payload URL:** `https://www.curseforge.com/api/projects/{projectID}/package?token={token}`
-   - Replace `{projectID}` and `{token}` with your values.
-   - Leave other settings at defaults.
+### Repo packaging files
 
-**3. Repo `.pkgmeta`** (repo root, not inside `GuildieCrafts/`)
+| File | Purpose |
+|------|---------|
+| `.pkgmeta` (repo root) | `package-as: GuildieCrafts`, `manual-changelog: CHANGELOG.md`, `ignore:` list. **Must be UTF-8 without BOM.** |
+| `CHANGELOG.md` | Release notes; packager picks the section matching the tag (e.g. `## v2.2.8`) |
+| `GuildieCrafts/GuildieCrafts.toc` | `## Version:` must match tag; `## X-Curse-Project-ID: 1655417`; `## Interface: 20505, 20506` |
+| `.github/workflows/release.yml` | Tag push → flatten `GuildieCrafts/` → `BigWigsMods/packager@v2` → CurseForge upload |
 
-Per [automatic packaging docs](https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging): `package-as`, `ignore`, and `manual-changelog: CHANGELOG.md` (simple string form). File must be **UTF-8 without BOM**. `GuildieCrafts/GuildieCrafts.toc` includes `## X-Curse-Project-ID: 1655417`.
+Do **not** use nested `manual-changelog:` YAML blocks — use the simple string form from the docs: `manual-changelog: CHANGELOG.md`.
 
-**4. GitHub Actions (Upload API fallback)** — [CurseForge API](https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-api)
+### Release checklist (agents)
 
-Add repo secret **`CF_API_KEY`** (same token as the webhook). Pushing a `v*` tag runs `.github/workflows/release.yml` (`BigWigsMods/packager@v2`), which uploads via `/upload-file`.
+Only when the user **explicitly** asks to publish on CurseForge:
 
-Project logo: [Art/GuildieCrafts-Logo.png](Art/GuildieCrafts-Logo.png).
+1. Bump `## Version:` in `GuildieCrafts/GuildieCrafts.toc` and `GuildieCrafts.VERSION` in `Core.lua`.
+2. Add a `## vX.Y.Z` section to `CHANGELOG.md`.
+3. Run `.\scripts\sync-guildiecraftstest.ps1`.
+4. Run `.\scripts\check-craft-categories.ps1` if HoD crafts changed.
+5. Commit and push to `main`.
+6. Create and push tag (name must match toc version with `v` prefix):
 
-### How it works
+```powershell
+git tag v2.2.8
+git push origin v2.2.8
+```
 
-1. Commit and push changes to `main`.
-2. Create a **git tag** on that commit (e.g. `v2.2.2`).
-3. Push the tag — GitHub fires the webhook; CurseForge runs the packager.
-4. A zip appears under **Files**, version from `## Version:` in `GuildieCrafts/GuildieCrafts.toc`.
+7. Watch **GitHub → Actions → Release** — must show **success**.
+8. Check CurseForge → **Files** — new file appears as **Processing**, then **Approved** (may show as `vX.Y.Z-bcc` for TBC).
 
-Keep tag and `.toc` aligned (`v2.2.2` ↔ `2.2.2`).
+**Do not** push a tag unless the user asked for a CurseForge release. Commits to `main` alone are not releases.
 
-**Release type** (from [official docs](https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging)):
+**Do not** delete and re-push tags to “retry” — GitHub sends tag-delete webhooks that CurseForge ignores; use a **new patch version** instead (e.g. `v2.2.9`).
+
+### How the GitHub Action works
+
+Our addon source lives in `GuildieCrafts/`, but [BigWigs packager](https://github.com/BigWigsMods/packager) expects `GuildieCrafts.toc` at the **checkout root**. The workflow fixes this:
+
+```yaml
+# .github/workflows/release.yml (summary)
+on:
+  push:
+    tags: ["v*"]
+steps:
+  - checkout (fetch-depth: 0)
+  - run: cp -a GuildieCrafts/. . && rm -rf GuildieCrafts   # flatten for packager
+  - uses: BigWigsMods/packager@v2
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+```
+
+Output zip still installs as `Interface/AddOns/GuildieCrafts/` because `package-as: GuildieCrafts` in `.pkgmeta`.
+
+Local dev layout (`GuildieCrafts/` folder, `deploy-to-wow.ps1`) is unchanged — flattening happens **only in CI**.
+
+### Release type
 
 | Tag pattern | CurseForge file type |
 |-------------|----------------------|
-| Contains `alpha` (e.g. `2.3.0-alpha1`) | Alpha |
+| Contains `alpha` | Alpha |
 | Contains `beta` | Beta |
-| Other tagged commits | Release |
-| Untagged (only if “package all commits”) | Alpha |
+| `v2.2.8`, etc. | Release |
 
-Our tags (`v2.2.2`, etc.) ship as **Release**.
+### Why not webhook-only?
 
-### Release checklist
+The CurseForge webhook (`/api/projects/{id}/package?token=`) can return `{"success":true}` without creating a file. Known issues for this repo:
 
-Before tagging:
+- Packager expects a **flat** checkout; nested `GuildieCrafts/` is not found without the CI flatten step.
+- Webhook deliveries for **tag delete** (`"deleted": true`) do not package; only **tag create** (`"created": true`) should.
+- `.pkgmeta` with a UTF-8 BOM breaks YAML parsing (fixed in v2.2.4+).
 
-1. Bump `## Version:` in `GuildieCrafts/GuildieCrafts.toc`.
-2. Run `.\scripts\sync-guildiecraftstest.ps1`.
-3. Run `.\scripts\check-craft-categories.ps1` if HoD crafts changed.
-4. Commit and push to `main`.
-
-To publish on CurseForge (only when explicitly requested — see **Agent instructions** below):
-
-```powershell
-git tag v2.1.0          # match the .toc version, with a v prefix
-git push origin v2.1.0
-```
-
-If the tag already exists locally but was never pushed, push it. If you need to move a tag to a newer commit (rare), delete and recreate it — never force-push tags unless you know CurseForge should rebuild that version.
-
-Check CurseForge → **Files** or **Activity** after a minute; packaging is not instant.
+**Use GitHub Actions + `CF_API_KEY` as the supported path.** Keep the webhook if you want, but do not rely on it.
 
 ### Agent instructions
 
-**Do not create or push CurseForge release tags unless the user explicitly asks** to publish or release a version on CurseForge (e.g. “put this on CurseForge”, “release v2.1.0 to CurseForge”, “push the CurseForge tag”).
+**Do not create or push CurseForge release tags** unless the user explicitly asks (e.g. “release to CurseForge”, “push v2.3.0 to CurseForge”).
 
-When the user does ask:
+When they do ask, follow [Release checklist](#release-checklist-agents) above.
 
-1. Confirm `GuildieCrafts/GuildieCrafts.toc` version matches the requested release.
-2. Confirm changes are committed and pushed to `main`.
-3. Create the tag if it does not exist: `git tag v<version>` (e.g. `v2.1.0`).
-4. Push the tag: `git push origin v<version>`.
-5. Tell the user to check CurseForge Files/Activity for the new build.
+Normal “commit to GitHub” or “update docs” requests do **not** include tagging.
 
-Normal “commit to GitHub” requests do **not** include tagging unless the user also asks for CurseForge.
+Project logo: [Art/GuildieCrafts-Logo.png](Art/GuildieCrafts-Logo.png).
 
 ## Coexistence with GemOrder
 
