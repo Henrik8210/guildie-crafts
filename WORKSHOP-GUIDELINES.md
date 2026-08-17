@@ -49,11 +49,13 @@ Legacy manual path (same result):
 
 ## CurseForge release
 
-CurseForge is linked to GitHub and uses **tagged commits** for automatic packaging. Pushing code to `main` alone does **not** publish a new CurseForge file — only pushing a **version tag** does.
+Official docs: [Automatic Packaging](https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging).
+
+CurseForge packages from GitHub when a **tagged commit** is pushed (with “package tagged commits” enabled). Pushing to `main` alone does **not** publish a new file — only pushing a **version tag** does.
 
 ### Project setup (one-time)
 
-On CurseForge → Project → **Source**:
+**1. CurseForge → Project → Source**
 
 | Setting | Value |
 |---------|--------|
@@ -61,18 +63,40 @@ On CurseForge → Project → **Source**:
 | Repository URL | `https://github.com/Henrik8210/guildie-crafts` |
 | Automatic packaging | **Package any new tagged commits** (not “package all commits”) |
 
-The repo root has `.pkgmeta` with `package-as: GuildieCrafts`. The packager zips only `GuildieCrafts/` and ignores `GuildieCraftsTest/`, `scripts/`, and dev docs.
+**2. GitHub webhook** (required for packaging to trigger — linking the repo in Source alone is not enough)
+
+1. CurseForge → **API tokens** → create a token (e.g. name “Webhooks”).
+2. CurseForge → Project → **Overview** → **About This Project** → note the **project ID**.
+3. GitHub repo → **Settings** → **Webhooks** → **Add webhook**:
+   - **Payload URL:** `https://www.curseforge.com/api/projects/{projectID}/package?token={token}`
+   - Replace `{projectID}` and `{token}` with your values.
+   - Leave other settings at defaults.
+
+**3. Repo `.pkgmeta`** (repo root, not inside `GuildieCrafts/`)
+
+`package-as: GuildieCrafts` — the packager zips only that folder. `ignore:` excludes `GuildieCraftsTest/`, `scripts/`, dev docs, and root `Art/`. `manual-changelog` pulls release notes from `CHANGELOG.md`.
 
 Project logo: [Art/GuildieCrafts-Logo.png](Art/GuildieCrafts-Logo.png).
 
 ### How it works
 
-1. You commit and push changes to `main` on GitHub (normal dev workflow).
-2. A **git tag** marks a specific commit as a release (e.g. `v2.1.0`). Tags are not new commits — they are labels on an existing commit.
-3. When the tag is pushed to GitHub, CurseForge detects it and runs the packager.
-4. The packager builds a zip from `GuildieCrafts/` and uploads it under **Files** on CurseForge, using `## Version:` from `GuildieCrafts/GuildieCrafts.toc`.
+1. Commit and push changes to `main`.
+2. Create a **git tag** on that commit (e.g. `v2.2.2`).
+3. Push the tag — GitHub fires the webhook; CurseForge runs the packager.
+4. A zip appears under **Files**, version from `## Version:` in `GuildieCrafts/GuildieCrafts.toc`.
 
-Keep the tag name and `.toc` version aligned (e.g. tag `v2.1.0` ↔ toc `2.1.0`).
+Keep tag and `.toc` aligned (`v2.2.2` ↔ `2.2.2`).
+
+**Release type** (from [official docs](https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging)):
+
+| Tag pattern | CurseForge file type |
+|-------------|----------------------|
+| Contains `alpha` (e.g. `2.3.0-alpha1`) | Alpha |
+| Contains `beta` | Beta |
+| Other tagged commits | Release |
+| Untagged (only if “package all commits”) | Alpha |
+
+Our tags (`v2.2.2`, etc.) ship as **Release**.
 
 ### Release checklist
 

@@ -1,5 +1,6 @@
 ﻿# CurseForge / BigWigs packager (repo root — not inside GuildieCrafts/).
-# Triggers: push a version tag (e.g. v2.2.1) after saving Source on CurseForge.
+# Triggers: push a version tag (e.g. v2.2.2) after webhook + Source are configured.
+# Docs: https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging
 
 package-as: GuildieCrafts
 enable-nolib-creation: no
