@@ -74,7 +74,7 @@ No GitHub OAuth is required on the CurseForge Source page; URL + secret is enoug
 | `.pkgmeta` (repo root) | `package-as: GuildieCrafts`, `manual-changelog: CHANGELOG.md`, `ignore:` list. **Must be UTF-8 without BOM.** |
 | `CHANGELOG.md` | Release notes; packager picks the section matching the tag (e.g. `## v2.2.8`) |
 | `GuildieCrafts/GuildieCrafts.toc` | `## Version:` must match tag; `## X-Curse-Project-ID: 1655417`; `## Interface: 20505, 20506` |
-| `.github/workflows/release.yml` | Tag push → flatten `GuildieCrafts/` → `BigWigsMods/packager@v2` → CurseForge upload |
+| `.github/workflows/release.yml` | Tag push → `BigWigsMods/packager@v2` → CurseForge upload (uses `.pkgmeta` `move-folders`, **no flatten**) |
 
 Do **not** use nested `manual-changelog:` YAML blocks — use the simple string form from the docs: `manual-changelog: CHANGELOG.md`.
 
@@ -103,7 +103,14 @@ git push origin v2.2.8
 
 ### How the GitHub Action works
 
-Our addon source lives in `GuildieCrafts/`, but [BigWigs packager](https://github.com/BigWigsMods/packager) expects `GuildieCrafts.toc` at the **checkout root**. The workflow fixes this:
+Addon source lives in `GuildieCrafts/`. The [BigWigs packager](https://github.com/BigWigsMods/packager) expects to find `GuildieCrafts/GuildieCrafts.toc` via `.pkgmeta`:
+
+```yaml
+# .pkgmeta
+package-as: GuildieCrafts
+move-folders:
+  GuildieCrafts/GuildieCrafts: GuildieCrafts
+```
 
 ```yaml
 # .github/workflows/release.yml (summary)
@@ -112,15 +119,16 @@ on:
     tags: ["v*"]
 steps:
   - checkout (fetch-depth: 0)
-  - run: cp -a GuildieCrafts/. . && rm -rf GuildieCrafts   # flatten for packager
   - uses: BigWigsMods/packager@v2
     env:
       CF_API_KEY: ${{ secrets.CF_API_KEY }}
 ```
 
-Output zip still installs as `Interface/AddOns/GuildieCrafts/` because `package-as: GuildieCrafts` in `.pkgmeta`.
+**Do not flatten** `GuildieCrafts/` in CI — that breaks TOC discovery and can upload an empty zip. The `move-folders` entry hoists inner addon files into the package root.
 
-Local dev layout (`GuildieCrafts/` folder, `deploy-to-wow.ps1`) is unchanged — flattening happens **only in CI**.
+Output zip installs as `Interface/AddOns/GuildieCrafts/` because of `package-as: GuildieCrafts`.
+
+Local dev layout (`GuildieCrafts/` folder, `deploy-to-wow.ps1`) is unchanged.
 
 ### Release type
 
@@ -134,7 +142,7 @@ Local dev layout (`GuildieCrafts/` folder, `deploy-to-wow.ps1`) is unchanged —
 
 The CurseForge webhook (`/api/projects/{id}/package?token=`) can return `{"success":true}` without creating a file. Known issues for this repo:
 
-- Packager expects a **flat** checkout; nested `GuildieCrafts/` is not found without the CI flatten step.
+- Packager needs `.pkgmeta` `move-folders` for nested `GuildieCrafts/` — **do not flatten** in CI (v2.2.8 uploaded an empty zip).
 - Webhook deliveries for **tag delete** (`"deleted": true`) do not package; only **tag create** (`"created": true`) should.
 - `.pkgmeta` with a UTF-8 BOM breaks YAML parsing (fixed in v2.2.4+).
 

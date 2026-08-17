@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.9
+
+- **Fix CurseForge packaging** — use `.pkgmeta` `move-folders` for nested `GuildieCrafts/` layout; remove broken CI flatten step that uploaded an empty zip (only stray PNGs). Remove obsolete `assets/art-source/` from repo.
+
 ## v2.2.8
 
 - Fix GitHub Actions release: flatten `GuildieCrafts/` for BigWigs packager before upload.
