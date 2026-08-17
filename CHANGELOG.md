@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.7
+
+- Fix GitHub Actions: run packager with `-t GuildieCrafts` so nested addon layout packages correctly.
+
 ## v2.2.6
 
 - Fix GitHub Actions packager: `move-folders` so TOC is found in `GuildieCrafts/` subfolder.
