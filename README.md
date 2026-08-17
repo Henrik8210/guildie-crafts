@@ -33,6 +33,12 @@ Validate HoD craft categories before a release:
 .\scripts\check-craft-categories.ps1
 ```
 
+Rebuild in-game icon TGAs after editing `Art/GuildieCrafts-Icon.png`:
+
+```powershell
+.\scripts\export-icon-tga.ps1
+```
+
 ## License
 
 Same as GemOrder — personal/guild use.

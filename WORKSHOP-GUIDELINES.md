@@ -14,6 +14,27 @@ After changes, copy both folders to:
 
 Then `/reload` in game.
 
+## Icon assets
+
+Source art: [Art/GuildieCrafts-Icon.png](Art/GuildieCrafts-Icon.png). In-game textures:
+
+| File | Size | Use |
+|------|------|-----|
+| `GuildieCrafts/Art/WorkshopLogo.tga` | 256×256 | Minimap button |
+| `GuildieCrafts/Art/WorkshopLogoPortrait.tga` | 64×64 | Workshop UI portrait (no workshop selected) |
+
+Rebuild after editing the PNG:
+
+```powershell
+.\scripts\export-icon-tga.ps1
+.\scripts\sync-guildiecraftstest.ps1
+.\scripts\deploy-to-wow.ps1
+```
+
+`export-icon-tga.ps1` crops the baked-in square frame (~17%) and applies a circular alpha mask for the portrait. `png-to-tga.ps1` writes BGRA directly (GDI+ LockBits order) — do not swap R/B when exporting.
+
+CurseForge / web logo: [Art/GuildieCrafts-Logo.png](Art/GuildieCrafts-Logo.png) (export via `.\scripts\export-logo-png.ps1` if needed).
+
 ## Workflow
 
 1. Edit `GuildieCrafts/` only (not the test folder directly).

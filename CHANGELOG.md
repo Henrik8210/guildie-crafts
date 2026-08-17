@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.2.2
+
+- **Icon color fix** — corrected red/blue channel swap in PNG→TGA export; minimap and UI portrait now show the warm forge colors.
+- **Portrait crop** — circular mask and inset tex coords for the workshop UI portrait slot.
+
 ## v2.2.1
 
 - **New addon icon** — guild knights around a blacksmith at the forge (minimap + workshop UI).

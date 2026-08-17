@@ -342,7 +342,9 @@ local function ApplyPortraitToBlizzardSlot(tex, texturePath)
 
     if IsAddonTexturePath(texturePath) then
         tex:SetTexture(texturePath)
-        tex:SetTexCoord(-0.05, 1.05, -0.05, 1.05)
+        -- Portrait slot is circular; asset is pre-cropped/masked — slight inset only.
+        local inset = 0.04
+        tex:SetTexCoord(inset, 1 - inset, inset, 1 - inset)
         return
     end
 
@@ -376,7 +378,9 @@ local function ApplyCircularPortraitTexture(tex, texturePath, anchorFrame)
 
     if IsAddonTexturePath(texturePath) then
         tex:SetTexture(texturePath)
-        tex:SetTexCoord(-0.05, 1.05, -0.05, 1.05)
+        -- Portrait slot is circular; asset is pre-cropped/masked — slight inset only.
+        local inset = 0.04
+        tex:SetTexCoord(inset, 1 - inset, inset, 1 - inset)
         return
     end
 
