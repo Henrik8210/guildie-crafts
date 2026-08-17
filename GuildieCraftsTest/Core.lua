@@ -107,7 +107,7 @@ function GuildieCraftsTest_MarkOrderSeen(orderId)
     GuildieCraftsTest_GetSeenOrderIds()[orderId] = true
 end
 
-GuildieCraftsTest.VERSION = "2.2.5"
+GuildieCraftsTest.VERSION = "2.2.6"
 
 function GuildieCraftsTest_GetVersion()
     return GuildieCraftsTest.VERSION

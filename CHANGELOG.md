@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.6
+
+- Fix GitHub Actions packager: `move-folders` so TOC is found in `GuildieCrafts/` subfolder.
+
 ## v2.2.5
 
 - Publish via GitHub Actions now that CurseForge `CF_API_KEY` is configured.
