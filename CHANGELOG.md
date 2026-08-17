@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.4
+
+- **CurseForge packaging** — fix `.pkgmeta` (remove BOM, doc-style `manual-changelog`), add `## X-Curse-Project-ID`, exclude debug code from packages, GitHub Actions release workflow.
+
 ## v2.2.3
 
 - Republish — same addon content as v2.2.2; triggers CurseForge automatic packaging.

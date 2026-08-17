@@ -74,7 +74,11 @@ CurseForge packages from GitHub when a **tagged commit** is pushed (with “pack
 
 **3. Repo `.pkgmeta`** (repo root, not inside `GuildieCrafts/`)
 
-`package-as: GuildieCrafts` — the packager zips only that folder. `ignore:` excludes `GuildieCraftsTest/`, `scripts/`, dev docs, and root `Art/`. `manual-changelog` pulls release notes from `CHANGELOG.md`.
+Per [automatic packaging docs](https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging): `package-as`, `ignore`, and `manual-changelog: CHANGELOG.md` (simple string form). File must be **UTF-8 without BOM**. `GuildieCrafts/GuildieCrafts.toc` includes `## X-Curse-Project-ID: 1655417`.
+
+**4. GitHub Actions (Upload API fallback)** — [CurseForge API](https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-api)
+
+Add repo secret **`CF_API_KEY`** (same token as the webhook). Pushing a `v*` tag runs `.github/workflows/release.yml` (`BigWigsMods/packager@v2`), which uploads via `/upload-file`.
 
 Project logo: [Art/GuildieCrafts-Logo.png](Art/GuildieCrafts-Logo.png).
 

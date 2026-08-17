@@ -1,0 +1,22 @@
+# Package and upload to CurseForge on version tag push (BigWigs packager + Upload API).
+# Add repo secret CF_API_KEY from https://authors.curseforge.com/#/settings/api-tokens
+# Docs: https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-api
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: BigWigsMods/packager@v2
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}

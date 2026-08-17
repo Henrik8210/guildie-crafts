@@ -1,4 +1,5 @@
-﻿GuildieCrafts = GuildieCrafts or {}
+﻿--@do-not-package@
+GuildieCrafts = GuildieCrafts or {}
 local Debug = {}
 GuildieCrafts.Debug = Debug
 
@@ -164,3 +165,4 @@ function Debug:HandleCommand(msg)
 
     print("|cff00ccffGuildie Crafts|r Unknown debug command. Try /gor debug help")
 end
+--@end-do-not-package@

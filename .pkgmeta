@@ -1,13 +1,10 @@
-﻿# CurseForge / BigWigs packager (repo root — not inside GuildieCrafts/).
-# Triggers: push a version tag (e.g. v2.2.2) after webhook + Source are configured.
+# CurseForge / BigWigs packager (repo root -- not inside GuildieCrafts/).
+# Webhook: POST /api/projects/{id}/package?token= after a tag push.
 # Docs: https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging
 
 package-as: GuildieCrafts
 enable-nolib-creation: no
-
-manual-changelog:
-  filename: CHANGELOG.md
-  markup-type: markdown
+manual-changelog: CHANGELOG.md
 
 ignore:
   - GuildieCraftsTest
@@ -20,5 +17,7 @@ ignore:
   - RELEASE_NOTES_v2.2.0.md
   - RELEASE_NOTES_v2.2.1.md
   - RELEASE_NOTES_v2.2.2.md
+  - RELEASE_NOTES_v2.2.3.md
   - .cursor
   - .gitignore
+  - .github
