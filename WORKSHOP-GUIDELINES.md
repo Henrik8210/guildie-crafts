@@ -8,11 +8,9 @@
 
 ## WoW install path
 
-After changes, copy both folders to:
-
 `C:\Program Files (x86)\World of Warcraft\_anniversary_\Interface\AddOns\`
 
-Then `/reload` in game.
+See [Workflow](#workflow) below — **development testing** and **main addon updates** use different deploy steps.
 
 ## Icon assets
 
@@ -28,7 +26,7 @@ Rebuild after editing the PNG:
 ```powershell
 .\scripts\export-icon-tga.ps1
 .\scripts\sync-guildiecraftstest.ps1
-.\scripts\deploy-to-wow.ps1
+# During dev testing, deploy test only (see Workflow). For a release, use deploy-to-wow.ps1.
 ```
 
 `export-icon-tga.ps1` crops the baked-in square frame (~17%) and applies a circular alpha mask for the portrait. `png-to-tga.ps1` writes BGRA directly (GDI+ LockBits order) — do not swap R/B when exporting.
@@ -37,13 +35,56 @@ CurseForge / web logo: [Art/GuildieCrafts-Logo.png](Art/GuildieCrafts-Logo.png) 
 
 ## Workflow
 
-1. Edit `GuildieCrafts/` only (not the test folder directly).
-2. Run `.\scripts\sync-guildiecraftstest.ps1` to mirror into `GuildieCraftsTest/`.
-3. Bump `## Version:` in `GuildieCrafts.toc` when shipping a release.
-4. Commit and push when asked.
-5. Run `.\scripts\deploy-to-wow.ps1` (copies addon *contents* into the WoW AddOns folder — do not nest `GuildieCrafts\GuildieCrafts\`).
+**Source of truth:** `GuildieCrafts/` only. Never edit `GuildieCraftsTest/` directly — it is generated from the main addon.
 
-Legacy manual path (same result):
+**Sync direction (one way):**
+
+```
+GuildieCrafts/  ──sync-guildiecraftstest.ps1──►  GuildieCraftsTest/
+```
+
+After any change in `GuildieCrafts/`, run:
+
+```powershell
+.\scripts\sync-guildiecraftstest.ps1
+```
+
+That mirrors code into `GuildieCraftsTest/` with test-specific names (saved vars, sync prefix, slash commands). Changes do **not** flow back from test to main.
+
+### Development testing (GuildieCraftsTest only)
+
+When trying new work in game, use **only** the test addon in WoW:
+
+1. Edit `GuildieCrafts/`.
+2. Run `.\scripts\sync-guildiecraftstest.ps1`.
+3. Deploy **only** `GuildieCraftsTest` to WoW (do **not** overwrite `GuildieCrafts` in AddOns during dev):
+
+```powershell
+Copy-Item -Path "GuildieCraftsTest\*" -Destination "C:\Program Files (x86)\World of Warcraft\_anniversary_\Interface\AddOns\GuildieCraftsTest" -Recurse -Force
+```
+
+4. In the WoW addon list: **enable GuildieCraftsTest**, **disable GuildieCrafts** (avoid two copies of the same logic fighting each other).
+5. `/reload` — use `/gwtest`, `/gwt`, or `/gwtt`.
+
+Do **not** run `.\scripts\deploy-to-wow.ps1` for day-to-day dev — that script updates **both** addons and is meant for release or when you explicitly want the live addon updated locally.
+
+### Main addon update (GuildieCrafts)
+
+When shipping or when you want the CurseForge/local **main** addon to match repo `GuildieCrafts/`:
+
+1. Edit `GuildieCrafts/`.
+2. Run `.\scripts\sync-guildiecraftstest.ps1` (keeps the test mirror in step).
+3. Bump `## Version:` in `GuildieCrafts.toc` and `GuildieCrafts.VERSION` in `Core.lua` when releasing.
+4. Commit and push when asked.
+5. Deploy both folders if you want local WoW to match release bits:
+
+```powershell
+.\scripts\deploy-to-wow.ps1
+```
+
+(copies addon *contents* into each AddOns folder — do not nest `GuildieCrafts\GuildieCrafts\`).
+
+Legacy manual path for main addon only:
 
 `Copy-Item -Path "GuildieCrafts\*" -Destination "C:\Program Files (x86)\World of Warcraft\_anniversary_\Interface\AddOns\GuildieCrafts" -Recurse -Force`
 
