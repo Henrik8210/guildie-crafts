@@ -36,7 +36,6 @@ SlashCmdList["GUILDIECRAFTS"] = function(msg)
         if err then
             print("|cff00ccffGuildie Crafts|r " .. err)
         else
-            print("|cff00ccffGuildie Crafts|r Selected workshop.")
             GuildieCrafts_RefreshUI()
         end
         return

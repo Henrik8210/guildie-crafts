@@ -1010,7 +1010,6 @@ function UI:CreateWorkshopPanel()
                 if err then
                     print("|cff00ccffGuildieCraftsTest|r " .. err)
                 else
-                    print("|cff00ccffGuildieCraftsTest|r Selected " .. openRoom.name .. ".")
                     SetDropdownDisplayText(panel.joinDropdown, openRoom.name)
                     UI:Refresh()
                 end
@@ -1180,7 +1179,6 @@ function UI:CreateWorkshopPanel()
         if err then
             print("|cff00ccffGuildieCraftsTest|r " .. err)
         else
-            print("|cff00ccffGuildieCraftsTest|r Workshop deselected. You remain a member — select another below.")
             SetDropdownDisplayText(panel.joinDropdown, "Select a workshop...")
         end
         self:Refresh()
@@ -1336,6 +1334,10 @@ function UI:RefreshWorkshopMembers()
     if not room then
         panel.memberContent:SetHeight(40)
         return
+    end
+
+    if IsInGuild() and GuildRoster then
+        GuildRoster()
     end
 
     panel.membersHelp:ClearAllPoints()
@@ -1766,6 +1768,14 @@ function UI:RefreshStockPanel()
             AddSection(jcName, counts, "jc", { noReport = not report })
         end
     end
+
+    local gbTitle = "Guild Bank"
+    local gbNote = GuildieCraftsTest_GetGuildBankStockNote and GuildieCraftsTest_GetGuildBankStockNote(room)
+    if gbNote then
+        gbTitle = gbTitle .. " |cff888888(" .. gbNote .. ")|r"
+    end
+    AddDivider()
+    AddSection(gbTitle, GuildieCraftsTest_GetGuildBankStockForRoom(room), "personal")
 
     AddSection("Workshop Total", GuildieCraftsTest_GetAggregatedWorkshopStock(room), "total")
 

@@ -17,6 +17,7 @@ local MSG_COLEADER = "O"
 local MSG_STOCK = "K"
 local MSG_QUEUE = "P"
 local MSG_RECIPES = "E"
+local MSG_CLASS = "Y"
 
 local function SplitMessage(msg, sep)
     local parts = {}
@@ -273,8 +274,21 @@ function Sync:BroadcastRoom(room)
     self:Send(msg)
 end
 
-function Sync:BroadcastJoin(roomId, player)
-    self:Send(table.concat({ MSG_JOIN, roomId, EscapeField(player) }, ":"))
+function Sync:BroadcastPlayerClass(player, classToken)
+    self:Send(table.concat({
+        MSG_CLASS,
+        EscapeField(player),
+        EncodeField(classToken or "-"),
+    }, ":"))
+end
+
+function Sync:BroadcastJoin(roomId, player, classToken)
+    self:Send(table.concat({
+        MSG_JOIN,
+        roomId,
+        EscapeField(player),
+        EncodeField(classToken or "-"),
+    }, ":"))
 end
 
 function Sync:BroadcastLeave(roomId, player)
@@ -464,6 +478,10 @@ function Sync:OnAddonMessage(prefix, message, channel, sender)
         end
         room.members = room.members or {}
         room.members[parts[3]] = true
+        local classToken = DecodeField(parts[4])
+        if classToken then
+            GuildieCraftsTest_CachePlayerClass(parts[3], classToken)
+        end
         GuildieCraftsTest_ApplyRoom(room)
         if GuildieCraftsTest_IsRoomMember(room, UnitName("player")) then
             self:BroadcastRoom(room)
@@ -519,14 +537,38 @@ function Sync:OnAddonMessage(prefix, message, channel, sender)
             end
         end
     elseif msgType == MSG_STOCK then
-        local room = GuildieCraftsTest_GetActiveRoom()
-        if not room or not GuildieCraftsTest_HasJoinedWorkshop() then
+        local source = parts[3]
+        local professionId = nil
+        if source and source:sub(1, 3) == "gb-" then
+            professionId = source:sub(4)
+            source = "gb"
+        end
+        if source == "gb" then
+            if not IsInGuild() then
+                return
+            end
+            GuildieCraftsTest_ApplyStockReport(parts[2], DecodeStock(parts[4]), source, professionId)
+        else
+            local room = GuildieCraftsTest_GetActiveRoom()
+            if not room or not GuildieCraftsTest_HasJoinedWorkshop() then
+                return
+            end
+            if not GuildieCraftsTest_AcceptsWorkshopStockReport(room, parts[2]) then
+                return
+            end
+            GuildieCraftsTest_ApplyStockReport(parts[2], DecodeStock(parts[4]), source)
+        end
+    elseif msgType == MSG_CLASS then
+        if not IsInGuild() then
             return
         end
-        if not GuildieCraftsTest_AcceptsWorkshopStockReport(room, parts[2]) then
-            return
+        local classToken = DecodeField(parts[3])
+        if classToken then
+            GuildieCraftsTest_CachePlayerClass(parts[2], classToken)
+            if GuildieCraftsTest.UI and GuildieCraftsTest.UI.frame then
+                GuildieCraftsTest.UI:Refresh()
+            end
         end
-        GuildieCraftsTest_ApplyStockReport(parts[2], DecodeStock(parts[4]), parts[3])
     elseif msgType == MSG_RECIPES then
         local room = GuildieCraftsTest_GetActiveRoom()
         if not room or not GuildieCraftsTest_HasJoinedWorkshop() then

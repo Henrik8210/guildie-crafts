@@ -6,6 +6,13 @@ local function EnsureDB()
     GuildieCraftsTestDB.settings = GuildieCraftsTestDB.settings or { jcMode = false }
 end
 
+local function BroadcastSelfJoin(roomId)
+    local player = UnitName("player")
+    local _, class = UnitClass("player")
+    GuildieCraftsTest_CachePlayerClass(player, class)
+    GuildieCraftsTest.Sync:BroadcastJoin(roomId, player, class)
+end
+
 function GuildieCraftsTest_GetGuildName()
     if not IsInGuild() then
         return nil
@@ -197,11 +204,27 @@ function GuildieCraftsTest_CreateWorkshop(name, expansion, phase, profession)
     GuildieCraftsTestDB.rooms[room.id] = room
     GuildieCraftsTestDB.settings.activeRoomId = room.id
     GuildieCraftsTest.Sync:BroadcastRoom(room)
-    GuildieCraftsTest.Sync:BroadcastJoin(room.id, player)
+    BroadcastSelfJoin(room.id)
     if GuildieCraftsTest_ShouldShareStock() then
         GuildieCraftsTest_RefreshLocalStock()
     end
     return room
+end
+
+function GuildieCraftsTest_EnsureJoinedAllOpenWorkshops()
+    EnsureDB()
+    if not IsInGuild() then
+        return
+    end
+
+    local player = UnitName("player")
+    for _, room in ipairs(GuildieCraftsTest_GetOpenRooms()) do
+        room.members = room.members or {}
+        if not GuildieCraftsTest_IsRoomMember(room, player) then
+            room.members[player] = true
+        end
+        BroadcastSelfJoin(room.id)
+    end
 end
 
 function GuildieCraftsTest_JoinWorkshop(roomId)
@@ -221,7 +244,7 @@ function GuildieCraftsTest_JoinWorkshop(roomId)
     local player = UnitName("player")
     room.members[player] = true
     GuildieCraftsTestDB.settings.activeRoomId = room.id
-    GuildieCraftsTest.Sync:BroadcastJoin(room.id, player)
+    BroadcastSelfJoin(room.id)
     if C_Timer and C_Timer.After then
         C_Timer.After(0.5, function()
             GuildieCraftsTest.Sync:RequestSync()
@@ -476,6 +499,9 @@ function GuildieCraftsTest_ApplyRoom(room)
         return
     end
     GuildieCraftsTestDB.rooms[room.id] = room
+    if room.open and GuildieCraftsTest_IsSameGuild(room) then
+        GuildieCraftsTest_EnsureJoinedAllOpenWorkshops()
+    end
     if GuildieCraftsTest.UI then
         GuildieCraftsTest_RefreshUI()
     end

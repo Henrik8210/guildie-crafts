@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.2.11
+
+- **Stock — Guild Bank** — tracked workshop materials in the guild bank appear in the Stock tab (above Workshop Total) and count toward the total. One guild bank visit scans all enabled professions and syncs to the guild.
+- **Auto-join workshops** — installing the addon and logging in adds you as a member of every open guild workshop automatically (no need to select from the dropdown first).
+- **Member list class colors** — workshop members show correct class colors; class is synced on login and from the guild roster.
+- **UI** — selecting or deselecting a workshop no longer spams chat (order notifications unchanged).
+
 ## v2.2.10
 
 - **HoD craft order dropdowns** — Tailoring, Leatherworking, and Blacksmithing order modals now show recipe-known indicators (green check / red X) like Jewelcrafting gem picks.

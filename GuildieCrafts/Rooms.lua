@@ -6,6 +6,13 @@ local function EnsureDB()
     GuildieCraftsDB.settings = GuildieCraftsDB.settings or { jcMode = false }
 end
 
+local function BroadcastSelfJoin(roomId)
+    local player = UnitName("player")
+    local _, class = UnitClass("player")
+    GuildieCrafts_CachePlayerClass(player, class)
+    GuildieCrafts.Sync:BroadcastJoin(roomId, player, class)
+end
+
 function GuildieCrafts_GetGuildName()
     if not IsInGuild() then
         return nil
@@ -197,11 +204,27 @@ function GuildieCrafts_CreateWorkshop(name, expansion, phase, profession)
     GuildieCraftsDB.rooms[room.id] = room
     GuildieCraftsDB.settings.activeRoomId = room.id
     GuildieCrafts.Sync:BroadcastRoom(room)
-    GuildieCrafts.Sync:BroadcastJoin(room.id, player)
+    BroadcastSelfJoin(room.id)
     if GuildieCrafts_ShouldShareStock() then
         GuildieCrafts_RefreshLocalStock()
     end
     return room
+end
+
+function GuildieCrafts_EnsureJoinedAllOpenWorkshops()
+    EnsureDB()
+    if not IsInGuild() then
+        return
+    end
+
+    local player = UnitName("player")
+    for _, room in ipairs(GuildieCrafts_GetOpenRooms()) do
+        room.members = room.members or {}
+        if not GuildieCrafts_IsRoomMember(room, player) then
+            room.members[player] = true
+        end
+        BroadcastSelfJoin(room.id)
+    end
 end
 
 function GuildieCrafts_JoinWorkshop(roomId)
@@ -221,7 +244,7 @@ function GuildieCrafts_JoinWorkshop(roomId)
     local player = UnitName("player")
     room.members[player] = true
     GuildieCraftsDB.settings.activeRoomId = room.id
-    GuildieCrafts.Sync:BroadcastJoin(room.id, player)
+    BroadcastSelfJoin(room.id)
     if C_Timer and C_Timer.After then
         C_Timer.After(0.5, function()
             GuildieCrafts.Sync:RequestSync()
@@ -476,6 +499,9 @@ function GuildieCrafts_ApplyRoom(room)
         return
     end
     GuildieCraftsDB.rooms[room.id] = room
+    if room.open and GuildieCrafts_IsSameGuild(room) then
+        GuildieCrafts_EnsureJoinedAllOpenWorkshops()
+    end
     if GuildieCrafts.UI then
         GuildieCrafts_RefreshUI()
     end

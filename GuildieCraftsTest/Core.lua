@@ -107,7 +107,7 @@ function GuildieCraftsTest_MarkOrderSeen(orderId)
     GuildieCraftsTest_GetSeenOrderIds()[orderId] = true
 end
 
-GuildieCraftsTest.VERSION = "2.2.10"
+GuildieCraftsTest.VERSION = "2.2.11"
 
 function GuildieCraftsTest_GetVersion()
     return GuildieCraftsTest.VERSION
@@ -156,10 +156,41 @@ function GuildieCraftsTest_GetRoleLabel(role)
 end
 
 local function NormalizePlayerName(name)
+    if not name then
+        return nil
+    end
     if Ambiguate then
         return Ambiguate(name, "none")
     end
     return name
+end
+
+local function ShortPlayerName(name)
+    if not name then
+        return nil
+    end
+    return name:match("^([^%-]+)") or name
+end
+
+local function PlayerNamesMatch(a, b)
+    if not a or not b then
+        return false
+    end
+    if a == b then
+        return true
+    end
+    if NormalizePlayerName(a) == NormalizePlayerName(b) then
+        return true
+    end
+    if ShortPlayerName(a) == ShortPlayerName(b) then
+        return true
+    end
+    if Ambiguate then
+        if Ambiguate(a, "short") == Ambiguate(b, "short") then
+            return true
+        end
+    end
+    return false
 end
 
 local function LocalizedClassToToken(classDisplayName)
@@ -186,11 +217,63 @@ local function LocalizedClassToToken(classDisplayName)
     return nil
 end
 
-local function ClassFromGuildRosterInfo(name, classDisplayName, classFileName)
-    if classFileName and classFileName ~= "" then
+local function ValidClassToken(token)
+    return type(token) == "string" and token ~= "" and RAID_CLASS_COLORS and RAID_CLASS_COLORS[token] ~= nil
+end
+
+local function ClassFromRosterEntry(classDisplayName, classFileName)
+    if ValidClassToken(classFileName) then
         return classFileName
     end
-    return LocalizedClassToToken(classDisplayName)
+    local localized = LocalizedClassToToken(classDisplayName)
+    if ValidClassToken(localized) then
+        return localized
+    end
+    return nil
+end
+
+function GuildieCraftsTest_CachePlayerClass(playerName, classToken)
+    if not playerName or not ValidClassToken(classToken) then
+        return
+    end
+    GuildieCraftsTestDB = GuildieCraftsTestDB or {}
+    GuildieCraftsTestDB.playerClasses = GuildieCraftsTestDB.playerClasses or {}
+    GuildieCraftsTestDB.playerClasses[NormalizePlayerName(playerName)] = classToken
+    local shortName = ShortPlayerName(playerName)
+    if shortName then
+        GuildieCraftsTestDB.playerClasses[shortName] = classToken
+    end
+end
+
+function GuildieCraftsTest_BroadcastSelfPlayerClass()
+    if not IsInGuild() then
+        return
+    end
+    local player = UnitName("player")
+    local _, class = UnitClass("player")
+    GuildieCraftsTest_CachePlayerClass(player, class)
+    if GuildieCraftsTest.Sync and GuildieCraftsTest.Sync.BroadcastPlayerClass then
+        GuildieCraftsTest.Sync:BroadcastPlayerClass(player, class)
+    end
+end
+
+function GuildieCraftsTest_RefreshGuildPlayerClassCache()
+    if not IsInGuild() then
+        return
+    end
+
+    GuildieCraftsTestDB = GuildieCraftsTestDB or {}
+    GuildieCraftsTestDB.playerClasses = GuildieCraftsTestDB.playerClasses or {}
+
+    for i = 1, GetNumGuildMembers() do
+        local name, _, _, _, classDisplayName, _, _, _, _, _, classFileName = GetGuildRosterInfo(i)
+        if name then
+            local class = ClassFromRosterEntry(classDisplayName, classFileName)
+            if class then
+                GuildieCraftsTest_CachePlayerClass(name, class)
+            end
+        end
+    end
 end
 
 function GuildieCraftsTest_GetPlayerClassToken(playerName)
@@ -200,14 +283,20 @@ function GuildieCraftsTest_GetPlayerClassToken(playerName)
     local normalized = NormalizePlayerName(playerName)
     GuildieCraftsTestDB = GuildieCraftsTestDB or {}
     GuildieCraftsTestDB.playerClasses = GuildieCraftsTestDB.playerClasses or {}
-    if GuildieCraftsTestDB.playerClasses[normalized] then
-        return GuildieCraftsTestDB.playerClasses[normalized]
+    local cached = GuildieCraftsTestDB.playerClasses[normalized]
+        or GuildieCraftsTestDB.playerClasses[ShortPlayerName(playerName)]
+    if ValidClassToken(cached) then
+        return cached
+    end
+    if cached ~= nil then
+        GuildieCraftsTestDB.playerClasses[normalized] = nil
+        GuildieCraftsTestDB.playerClasses[ShortPlayerName(playerName)] = nil
     end
 
-    if normalized == NormalizePlayerName(UnitName("player")) then
+    if PlayerNamesMatch(playerName, UnitName("player")) then
         local _, class = UnitClass("player")
-        if class then
-            GuildieCraftsTestDB.playerClasses[normalized] = class
+        if ValidClassToken(class) then
+            GuildieCraftsTest_CachePlayerClass(playerName, class)
         end
         return class
     end
@@ -222,7 +311,7 @@ function GuildieCraftsTest_GetPlayerClassToken(playerName)
     if IsInRaid() then
         for i = 1, GetNumGroupMembers() do
             local class = classFromUnit("raid" .. i)
-            if class then
+            if ValidClassToken(class) then
                 GuildieCraftsTestDB.playerClasses[normalized] = class
                 return class
             end
@@ -230,7 +319,7 @@ function GuildieCraftsTest_GetPlayerClassToken(playerName)
     elseif IsInGroup() then
         for i = 1, GetNumGroupMembers() - 1 do
             local class = classFromUnit("party" .. i)
-            if class then
+            if ValidClassToken(class) then
                 GuildieCraftsTestDB.playerClasses[normalized] = class
                 return class
             end
@@ -240,10 +329,10 @@ function GuildieCraftsTest_GetPlayerClassToken(playerName)
     if IsInGuild() then
         for i = 1, GetNumGuildMembers() do
             local name, _, _, _, classDisplayName, _, _, _, _, _, classFileName = GetGuildRosterInfo(i)
-            if name and NormalizePlayerName(name) == normalized then
-                local class = ClassFromGuildRosterInfo(name, classDisplayName, classFileName)
-                if class then
-                    GuildieCraftsTestDB.playerClasses[normalized] = class
+            if name and PlayerNamesMatch(name, playerName) then
+                local class = ClassFromRosterEntry(classDisplayName, classFileName)
+                if ValidClassToken(class) then
+                    GuildieCraftsTest_CachePlayerClass(name, class)
                 end
                 return class
             end
@@ -743,9 +832,22 @@ local function TryGuildSync()
         GuildRoster()
     end
 
+    if C_Timer and C_Timer.After then
+        C_Timer.After(1, function()
+            if IsInGuild() then
+                GuildieCraftsTest_RefreshGuildPlayerClassCache()
+                if GuildieCraftsTest.UI and GuildieCraftsTest.UI.frame then
+                    GuildieCraftsTest.UI:Refresh()
+                end
+            end
+        end)
+    end
+
     GuildieCraftsTest_PurgeNonGuildData()
     GuildieCraftsTest.Sync:BroadcastAllRooms()
     GuildieCraftsTest.Sync:RequestSync()
+    GuildieCraftsTest_BroadcastSelfPlayerClass()
+    GuildieCraftsTest_EnsureJoinedAllOpenWorkshops()
 
     if GuildieCraftsTest_HasJoinedWorkshop() then
         GuildieCraftsTest_ScanBagsForGems()
@@ -777,6 +879,11 @@ local function OnPlayerLogin()
     After(5, function()
         TryGuildSync()
     end)
+    After(8, function()
+        if IsInGuild() then
+            GuildieCraftsTest_EnsureJoinedAllOpenWorkshops()
+        end
+    end)
 end
 
 local function OnGuildReady()
@@ -793,6 +900,7 @@ boot:SetScript("OnEvent", function(_, event, arg1)
     elseif event == "PLAYER_LOGIN" then
         OnPlayerLogin()
     elseif event == "GUILD_ROSTER_UPDATE" then
+        GuildieCraftsTest_RefreshGuildPlayerClassCache()
         OnGuildReady()
         if GuildieCraftsTest.UI and GuildieCraftsTest.UI.frame then
             GuildieCraftsTest.UI:Refresh()

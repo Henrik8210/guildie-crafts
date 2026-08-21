@@ -6,7 +6,10 @@ local function EnsureDB()
         bags = {},
         bank = {},
         jcReports = {},
+        guildBank = { byProfession = {} },
     }
+    GuildieCraftsTestDB.stock.guildBank = GuildieCraftsTestDB.stock.guildBank or { byProfession = {} }
+    GuildieCraftsTestDB.stock.guildBank.byProfession = GuildieCraftsTestDB.stock.guildBank.byProfession or {}
 end
 
 local function GetActiveStockProfession()
@@ -157,6 +160,9 @@ end
 function GuildieCraftsTest_RefreshLocalStock()
     GuildieCraftsTest_ScanBagsForGems()
     GuildieCraftsTest_ScanPersonalBankForGems()
+    if GuildieCraftsTest_IsGuildBankAccessible and GuildieCraftsTest_IsGuildBankAccessible() then
+        GuildieCraftsTest_ScanGuildBankForMaterials()
+    end
     if GuildieCraftsTest_ShouldShareStock() then
         GuildieCraftsTest_ShareWorkshopStock()
     end
@@ -205,6 +211,7 @@ function GuildieCraftsTest_GetWorkshopStockReports(room)
 end
 
 function GuildieCraftsTest_GetAggregatedWorkshopStock(room)
+    EnsureDB()
     local professionId = room and GuildieCraftsTest_GetRoomProfession(room) or "jewelcrafting"
     local totals = EmptyCounts(professionId)
     local player = UnitName("player")
@@ -219,12 +226,19 @@ function GuildieCraftsTest_GetAggregatedWorkshopStock(room)
             end
         end
     end
+    MergeCounts(totals, GuildieCraftsTest_GetGuildBankStockForRoom(room))
     return totals
 end
 
-function GuildieCraftsTest_ApplyStockReport(player, counts, source)
+function GuildieCraftsTest_ApplyStockReport(player, counts, source, professionId)
     EnsureDB()
-    if source == "jc" or source == "bags" then
+    if source == "gb" and professionId then
+        GuildieCraftsTestDB.stock.guildBank.byProfession[professionId] = {
+            counts = counts,
+            updatedAt = time(),
+            scannedBy = player,
+        }
+    elseif source == "jc" or source == "bags" then
         GuildieCraftsTestDB.stock.jcReports[player] = {
             counts = counts,
             updatedAt = time(),
@@ -261,6 +275,155 @@ end
 
 local stockEventFrame
 local bankScanQueued = false
+local guildBankScanQueued = false
+local GUILD_BANK_SLOTS = 98
+
+local function IsGuildBankAccessible()
+    if GuildBankFrame and GuildBankFrame.IsShown and GuildBankFrame:IsShown() then
+        return true
+    end
+    return false
+end
+
+function GuildieCraftsTest_IsGuildBankAccessible()
+    return IsGuildBankAccessible()
+end
+
+function GuildieCraftsTest_GetGuildBankStockForRoom(room)
+    EnsureDB()
+    if not room then
+        return {}
+    end
+    local professionId = GuildieCraftsTest_GetRoomProfession(room)
+    local entry = GuildieCraftsTestDB.stock.guildBank.byProfession[professionId]
+    return (entry and entry.counts) or EmptyCounts(professionId)
+end
+
+function GuildieCraftsTest_GetGuildBankStockNote(room)
+    EnsureDB()
+    if not room then
+        return nil
+    end
+    if IsGuildBankAccessible() then
+        return nil
+    end
+    local professionId = GuildieCraftsTest_GetRoomProfession(room)
+    local entry = GuildieCraftsTestDB.stock.guildBank.byProfession[professionId]
+    if entry and entry.updatedAt then
+        return "included from last visit"
+    end
+    return "open the guild bank once to include guild bank materials"
+end
+
+local function ScanGuildBankTab(tabIndex, countsByProfession)
+    for slot = 1, GUILD_BANK_SLOTS do
+        local link = GetGuildBankItemLink and GetGuildBankItemLink(tabIndex, slot)
+        local _, stackCount = GetGuildBankItemInfo(tabIndex, slot)
+        local itemId = ItemIdFromLink(link)
+        if itemId then
+            for _, counts in pairs(countsByProfession) do
+                AddItemToCounts(itemId, stackCount, counts)
+            end
+        end
+    end
+end
+
+local function BuildGuildBankProfessionCounts()
+    local countsByProfession = {}
+    for _, prof in ipairs(GuildieCraftsTest_PROFESSIONS or {}) do
+        if prof.enabled and GuildieCraftsTest_IsProfessionEnabled(prof.id) then
+            countsByProfession[prof.id] = EmptyCounts(prof.id)
+        end
+    end
+    return countsByProfession
+end
+
+local function StoreAndShareGuildBankScans(countsByProfession)
+    EnsureDB()
+    local scannedBy = UnitName("player")
+    local updatedAt = time()
+
+    for professionId, counts in pairs(countsByProfession) do
+        GuildieCraftsTestDB.stock.guildBank.byProfession[professionId] = {
+            counts = counts,
+            updatedAt = updatedAt,
+            scannedBy = scannedBy,
+        }
+        if IsInGuild() then
+            GuildieCraftsTest.Sync:BroadcastStock(counts, "gb-" .. professionId)
+        end
+    end
+
+    if GuildieCraftsTest.UI and GuildieCraftsTest.UI.frame then
+        GuildieCraftsTest.UI:Refresh()
+    end
+end
+
+function GuildieCraftsTest_ScanGuildBankForMaterials()
+    if not IsGuildBankAccessible() then
+        EnsureDB()
+        local professionId = GetActiveStockProfession()
+        local entry = GuildieCraftsTestDB.stock.guildBank.byProfession[professionId]
+        return (entry and entry.counts) or EmptyCounts(professionId)
+    end
+
+    if not IsInGuild() then
+        return {}
+    end
+
+    local countsByProfession = BuildGuildBankProfessionCounts()
+    local numTabs = GetNumGuildBankTabs and GetNumGuildBankTabs() or 0
+
+    for tab = 1, numTabs do
+        local _, _, isViewable = GetGuildBankTabInfo(tab)
+        if isViewable then
+            ScanGuildBankTab(tab, countsByProfession)
+        end
+    end
+
+    StoreAndShareGuildBankScans(countsByProfession)
+    return countsByProfession[GetActiveStockProfession()] or {}
+end
+
+local function QueueGuildBankStockRefresh()
+    if guildBankScanQueued then
+        return
+    end
+    guildBankScanQueued = true
+
+    local function run()
+        guildBankScanQueued = false
+        if not IsGuildBankAccessible() then
+            return
+        end
+
+        local numTabs = GetNumGuildBankTabs and GetNumGuildBankTabs() or 0
+        if QueryGuildBankTab then
+            for tab = 1, numTabs do
+                local _, _, isViewable = GetGuildBankTabInfo(tab)
+                if isViewable then
+                    QueryGuildBankTab(tab)
+                end
+            end
+        end
+
+        local function doScan()
+            GuildieCraftsTest_ScanGuildBankForMaterials()
+        end
+
+        if C_Timer and C_Timer.After then
+            C_Timer.After(0.25, doScan)
+        else
+            doScan()
+        end
+    end
+
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0.1, run)
+    else
+        run()
+    end
+end
 
 local function QueueBankStockRefresh()
     if bankScanQueued then
@@ -298,9 +461,13 @@ function GuildieCraftsTest_InitStockEvents()
     stockEventFrame = CreateFrame("Frame")
     stockEventFrame:RegisterEvent("BANKFRAME_OPENED")
     stockEventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+    stockEventFrame:RegisterEvent("GUILDBANKFRAME_OPENED")
+    stockEventFrame:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED")
     stockEventFrame:SetScript("OnEvent", function(_, event)
         if event == "BANKFRAME_OPENED" or event == "PLAYERBANKSLOTS_CHANGED" then
             QueueBankStockRefresh()
+        elseif event == "GUILDBANKFRAME_OPENED" or event == "GUILDBANKBAGSLOTS_CHANGED" then
+            QueueGuildBankStockRefresh()
         end
     end)
 end
